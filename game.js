@@ -449,7 +449,7 @@ class ArariGame {
     const promises = [];
 
     // Arari Spritesheet
-    promises.push(this.loadImage('assets/arari/arari_spritesheet.png?v=8.2').then(img => {
+    promises.push(this.loadImage('assets/arari/arari_spritesheet.png?v=8.4').then(img => {
       this.assets.arariSheet = img;
     }));
 
@@ -924,21 +924,16 @@ class ArariGame {
       let dx = 0;
       let dy = 0;
 
-      // Keyboard input
-      if (this.keys['ArrowLeft'] || this.keys['KeyA']) { dx -= 1; this.arari.facing = 3; }
-      if (this.keys['ArrowRight'] || this.keys['KeyD']) { dx += 1; this.arari.facing = 2; }
-      if (this.keys['ArrowUp'] || this.keys['KeyW']) { dy -= 1; this.arari.facing = 1; }
-      if (this.keys['ArrowDown'] || this.keys['KeyS']) { dy += 1; this.arari.facing = 0; }
+      // Keyboard input (WASD / Arrows)
+      if (this.keys['ArrowLeft'] || this.keys['KeyA']) dx -= 1;
+      if (this.keys['ArrowRight'] || this.keys['KeyD']) dx += 1;
+      if (this.keys['ArrowUp'] || this.keys['KeyW']) dy -= 1;
+      if (this.keys['ArrowDown'] || this.keys['KeyS']) dy += 1;
 
-      // Mobile Touchpad / Joystick input
+      // Mobile Dynamic Touch Joystick input
       if (this.touchJoystick.active) {
         dx = this.touchJoystick.moveX;
         dy = this.touchJoystick.moveY;
-        if (Math.abs(dx) > Math.abs(dy)) {
-          this.arari.facing = dx > 0 ? 2 : 3;
-        } else {
-          this.arari.facing = dy > 0 ? 0 : 1;
-        }
       } else if (dx !== 0 && dy !== 0) {
         dx *= 0.7071;
         dy *= 0.7071;
@@ -948,6 +943,26 @@ class ArariGame {
       const spd = this.arari.flying ? this.arari.flySpeed : this.arari.speed;
 
       if (this.arari.moving) {
+        // True 8-directional facing angle
+        const angle = Math.atan2(dy, dx); // -PI to +PI
+        if (angle >= -Math.PI / 8 && angle <= Math.PI / 8) {
+          this.arari.facing = 2; // Right
+        } else if (angle > Math.PI / 8 && angle < (3 * Math.PI) / 8) {
+          this.arari.facing = 4; // Down-Right
+        } else if (angle >= (3 * Math.PI) / 8 && angle <= (5 * Math.PI) / 8) {
+          this.arari.facing = 0; // Down
+        } else if (angle > (5 * Math.PI) / 8 && angle < (7 * Math.PI) / 8) {
+          this.arari.facing = 5; // Down-Left
+        } else if (angle >= (7 * Math.PI) / 8 || angle <= (-7 * Math.PI) / 8) {
+          this.arari.facing = 3; // Left
+        } else if (angle > (-7 * Math.PI) / 8 && angle < (-5 * Math.PI) / 8) {
+          this.arari.facing = 7; // Up-Left
+        } else if (angle >= (-5 * Math.PI) / 8 && angle <= (-3 * Math.PI) / 8) {
+          this.arari.facing = 1; // Up
+        } else if (angle > (-3 * Math.PI) / 8 && angle < -Math.PI / 8) {
+          this.arari.facing = 6; // Up-Right
+        }
+
         const nextX = this.arari.x + dx * spd;
         const nextY = this.arari.y + dy * spd;
 
@@ -1364,59 +1379,72 @@ class ArariGame {
     ctx.save();
     ctx.translate(Math.floor(x), Math.floor(y + walkBob));
 
-    // For left/right, horizontally flip the sprite when going left
-    const goingLeft = (facing === 3);
+    // For left-facing movement (Left, Down-Left, Up-Left), flip horizontally
+    const goingLeft = (facing === 3 || facing === 5 || facing === 7);
 
     if (sheet) {
       let row = 0;
       let col = 0;
 
       if (dancing) {
-        // Row 3 (front dance) or Row 7 (back dance)
-        const isUp = (facing === 1);
-        row = isUp ? 7 : 3;
+        // Victory Dance: Row 8 (back) or Row 7 (front)
+        const isUp = (facing === 1 || facing === 6 || facing === 7);
+        row = isUp ? 8 : 7;
         col = Math.floor(now * 0.008) % 4;
       } else if (flying) {
-        // Row 2 (front fly) or Row 6 (back fly)
-        const isUp = (facing === 1);
-        row = isUp ? 6 : 2;
-        col = Math.floor(now * 0.01) % 5;
-        if (row === 6) col = col % 4; // back fly only has 4 frames
+        // Flying in all directions:
+        if (facing === 1 || facing === 6 || facing === 7) {
+          row = 5; // Fly Up (back wings flapping)
+          col = Math.floor(now * 0.01) % 4;
+        } else if (facing === 0) {
+          row = 6; // Fly Down (front wings flapping)
+          col = Math.floor(now * 0.01) % 4;
+        } else {
+          row = 4; // Fly Side (5 frames, flipped if going left)
+          col = Math.floor(now * 0.01) % 5;
+        }
       } else if (moving) {
+        // Walking in all 8 directions:
         switch (facing) {
-          case 1: // Up: use back-view walk (Row 5, 4 frames)
-            row = 5;
+          case 0: // Down: Row 2 (Walk Down with alternating stepping paws)
+            row = 2;
             col = animFrame % 4;
             break;
-          case 0: // Down: use front idle, slightly animated (Row 0, 4 frames)
-            row = 0;
+          case 1: // Up: Row 3 (Walk Up with back stepping paws)
+          case 6: // Up-Right (Row 3)
+          case 7: // Up-Left (Row 3, flipped)
+            row = 3;
             col = animFrame % 4;
             break;
-          case 2: // Right: side walk Row 1 (5 frames)
-          case 3: // Left: same, flipped horizontally
+          case 2: // Right: Row 1 (Side walk 5 frames)
+          case 3: // Left: Row 1 (Side walk 5 frames, flipped)
+          case 4: // Down-Right: Row 1 (3/4 walk 5 frames)
+          case 5: // Down-Left: Row 1 (3/4 walk 5 frames, flipped)
           default:
             row = 1;
             col = animFrame % 5;
             break;
         }
       } else {
-        // Idle: face direction
-        if (facing === 1) {
-          row = 4; // Back idle
+        // Idle when stopped in any direction:
+        if (facing === 1 || facing === 6 || facing === 7) {
+          row = 9; // Idle Back
           col = Math.floor(now * 0.003) % 4;
+        } else if (facing === 2 || facing === 3) {
+          row = 1; // Idle Side posture
+          col = 0;
         } else {
-          row = 0; // Front idle
-          // Occasional wink (frame 2 briefly)
-          const t = Math.floor(now * 0.001) % 10;
-          col = (t === 8) ? 2 : (t === 9 ? 3 : 0);
+          row = 0; // Idle Front
+          const t = Math.floor(now * 0.001) % 8;
+          col = (t === 7) ? 2 : 0;
         }
       }
 
       const sx = col * FRAME_SIZE;
       const sy = row * FRAME_SIZE;
 
-      // Flip left-walking sprite horizontally
-      if (goingLeft && (moving || flying)) {
+      // Flip sprite horizontally when moving or looking left
+      if (goingLeft) {
         ctx.scale(-1, 1);
       }
 
@@ -1426,7 +1454,7 @@ class ArariGame {
         -DISPLAY_SIZE / 2, -DISPLAY_SIZE / 2, DISPLAY_SIZE, DISPLAY_SIZE
       );
 
-      if (goingLeft && (moving || flying)) {
+      if (goingLeft) {
         ctx.scale(-1, 1);
       }
     }

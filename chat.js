@@ -340,7 +340,7 @@ class ChatPointRoom {
     this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
 
     this.arariSheet = new Image();
-    this.arariSheet.src = 'assets/arari/arari_spritesheet.png?v=8.2';
+    this.arariSheet.src = 'assets/arari/arari_spritesheet.png?v=8.4';
 
     this.stageTile = new Image();
     this.stageTile.src = 'assets/tiles/tile_stage_skz.png';
@@ -860,27 +860,36 @@ class ChatPointRoom {
       
       let row = 0;
       let col = 0;
-      
+      let flipLeft = false;
+
       if (a.isWalking) {
         const dx = a.targetX - a.x;
         const dy = a.targetY - a.y;
         if (Math.abs(dx) > Math.abs(dy)) {
-          row = dx > 0 ? 2 : 3; // 2: Right walk, 3: Left walk with stepping paws
+          row = 1; // Side walk
           col = Math.floor(now * 0.008) % 5;
+          flipLeft = (dx < 0);
+        } else if (dy < 0) {
+          row = 3; // Up walk (back)
+          col = Math.floor(now * 0.008) % 4;
         } else {
-          row = dy > 0 ? 0 : 1; // 0: Down walk, 1: Up walk
+          row = 2; // Down walk (front)
           col = Math.floor(now * 0.008) % 4;
         }
       } else {
-        row = 0;
+        row = 0; // Front idle
         col = (Math.floor(now * 0.001) % 6 === 5) ? 3 : 0;
       }
+
+      if (flipLeft) ctx.scale(-1, 1);
 
       ctx.drawImage(
         this.arariSheet,
         col * FRAME_SIZE, row * FRAME_SIZE, FRAME_SIZE, FRAME_SIZE,
         -DISPLAY_SIZE / 2, -DISPLAY_SIZE / 2, DISPLAY_SIZE, DISPLAY_SIZE
       );
+
+      if (flipLeft) ctx.scale(-1, 1);
     } else {
       ctx.fillStyle = '#38bdf8';
       ctx.beginPath();
