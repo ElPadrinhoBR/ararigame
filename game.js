@@ -218,15 +218,9 @@ for (let bx = 1020; bx <= 1580; bx += 85) {
   BARRICADES.push({ x: bx, y: 1715, rot: 0 });
 }
 
-// Security Guards stationed facing crowd
-const GUARDS = [
-  { x: 1145, y: 960 }, { x: 1145, y: 1150 }, { x: 1145, y: 1300 },
-  { x: 1455, y: 960 }, { x: 1455, y: 1150 }, { x: 1455, y: 1300 },
-  { x: 620, y: 915 }, { x: 920, y: 915 },
-  { x: 1680, y: 915 }, { x: 1980, y: 915 },
-  { x: 985, y: 1450 }, { x: 985, y: 1600 },
-  { x: 1615, y: 1450 }, { x: 1615, y: 1600 }
-];
+// No security guards - only lights and barricades mark crowd boundaries
+const GUARDS = [];
+
 
 // Solid Colliders: Keep stage open, block crowd and outer bounds
 const COLLIDERS = [
@@ -455,7 +449,7 @@ class ArariGame {
     const promises = [];
 
     // Arari Spritesheet
-    promises.push(this.loadImage('assets/arari/arari_spritesheet.png?v=8.1').then(img => {
+    promises.push(this.loadImage('assets/arari/arari_spritesheet.png?v=8.2').then(img => {
       this.assets.arariSheet = img;
     }));
 
@@ -1215,37 +1209,28 @@ class ArariGame {
       });
     }
 
-    // 3. Security Guards
-    const guardImg = this.assets.securityGuard;
-    if (guardImg && guardImg.complete) {
-      GUARDS.forEach(g => {
-        ctx.drawImage(guardImg, g.x - 15, g.y - 25, 30, 50);
-      });
-    }
+    // 3. Security Guards — removed, boundary is marked by barricade lights only
 
-    // 4. Backstage Diagonal Stairs
+    // 4. Stage Stairs (authentic pair at stage entrances)
     const diagStairs = this.assets.diagStairs;
     if (diagStairs && diagStairs.complete) {
-      ctx.drawImage(diagStairs, 300, 160, 212, 127);
-      ctx.drawImage(diagStairs, 2040, 160, 212, 127);
+      ctx.drawImage(diagStairs, 380, 870, 90, 40);  // Left stage entrance
+      ctx.drawImage(diagStairs, 2130, 870, 90, 40); // Right stage entrance
     }
 
-    // 5. Backstage Stacked Flight Crates
+    // 5. Backstage Equipment Crates (backstage area only, not on the open stage)
     const crates = this.assets.stackedCrates;
     if (crates && crates.complete) {
-      ctx.drawImage(crates, 520, 260, 137, 90);
-      ctx.drawImage(crates, 920, 260, 137, 90);
-      ctx.drawImage(crates, 1620, 260, 137, 90);
-      ctx.drawImage(crates, 1960, 260, 137, 90);
+      ctx.drawImage(crates, 220, 220, 100, 70);
+      ctx.drawImage(crates, 2340, 220, 100, 70);
     }
 
-    // 6. Glass Cyber Planters on Stage Wings
+    // 6. Stage Wings — glass planters only on backstage, not on accessible stage floor
     const planter = this.assets.glassPlanter;
     if (planter && planter.complete) {
-      ctx.drawImage(planter, 460, 520, 49, 59);
-      ctx.drawImage(planter, 460, 780, 49, 59);
-      ctx.drawImage(planter, 2120, 520, 49, 59);
-      ctx.drawImage(planter, 2120, 780, 49, 59);
+      // Only in backstage corners (behind stage wall, y < 460)
+      ctx.drawImage(planter, 240, 310, 42, 52);
+      ctx.drawImage(planter, 2320, 310, 42, 52);
     }
 
     // 7. Speakers
@@ -1336,43 +1321,67 @@ class ArariGame {
     const sheet = this.assets.arariSheet;
 
     const FRAME_SIZE = 96;
-    const DISPLAY_SIZE = 58;
+    const DISPLAY_SIZE = 60;
 
     // Gentle footstep bob while moving on the ground
-    const walkBob = (moving && !flying) ? Math.sin(now * 0.02) * 2 : 0;
+    const walkBob = (moving && !flying) ? Math.sin(now * 0.02) * 1.5 : 0;
 
     ctx.save();
     ctx.translate(Math.floor(x), Math.floor(y + walkBob));
 
-    // Flip horizontally if facing left (facing === 3)
-    const flip = (facing === 3);
+    // For left/right, horizontally flip the sprite when going left
+    const goingLeft = (facing === 3);
 
     if (sheet) {
       let row = 0;
       let col = 0;
 
       if (dancing) {
-        // Quarta linha: Comemoração/Vitória, batendo as asas com alegria (4 frames)
-        row = 3;
+        // Row 3 (front dance) or Row 7 (back dance)
+        const isUp = (facing === 1);
+        row = isUp ? 7 : 3;
         col = Math.floor(now * 0.008) % 4;
       } else if (flying) {
-        // Terceira linha: Animação de pulo/voo (Jumping), preparação, subida asas abertas e pouso (5 frames)
-        row = 2;
+        // Row 2 (front fly) or Row 6 (back fly)
+        const isUp = (facing === 1);
+        row = isUp ? 6 : 2;
         col = Math.floor(now * 0.01) % 5;
+        if (row === 6) col = col % 4; // back fly only has 4 frames
       } else if (moving) {
-        // Segunda linha: Animação de caminhada (Walking), movimentando as patinhas e as asas de perfil/diagonal (5 frames)
-        row = 1;
-        col = animFrame % 5;
+        switch (facing) {
+          case 1: // Up: use back-view walk (Row 5, 4 frames)
+            row = 5;
+            col = animFrame % 4;
+            break;
+          case 0: // Down: use front idle, slightly animated (Row 0, 4 frames)
+            row = 0;
+            col = animFrame % 4;
+            break;
+          case 2: // Right: side walk Row 1 (5 frames)
+          case 3: // Left: same, flipped horizontally
+          default:
+            row = 1;
+            col = animFrame % 5;
+            break;
+        }
       } else {
-        // Primeira linha: Animação dela parada (Idle), piscando e mexendo as asinhas de frente (4 frames)
-        row = 0;
-        col = Math.floor(now * 0.003) % 4;
+        // Idle: face direction
+        if (facing === 1) {
+          row = 4; // Back idle
+          col = Math.floor(now * 0.003) % 4;
+        } else {
+          row = 0; // Front idle
+          // Occasional wink (frame 2 briefly)
+          const t = Math.floor(now * 0.001) % 10;
+          col = (t === 8) ? 2 : (t === 9 ? 3 : 0);
+        }
       }
 
       const sx = col * FRAME_SIZE;
       const sy = row * FRAME_SIZE;
 
-      if (flip && moving) {
+      // Flip left-walking sprite horizontally
+      if (goingLeft && (moving || flying)) {
         ctx.scale(-1, 1);
       }
 
@@ -1382,7 +1391,7 @@ class ArariGame {
         -DISPLAY_SIZE / 2, -DISPLAY_SIZE / 2, DISPLAY_SIZE, DISPLAY_SIZE
       );
 
-      if (flip && moving) {
+      if (goingLeft && (moving || flying)) {
         ctx.scale(-1, 1);
       }
     }
