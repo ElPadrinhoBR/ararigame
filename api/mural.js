@@ -1,7 +1,13 @@
 // Vercel Serverless Function: /api/mural
-// In-memory + persistent store with IP tracking (1 post-it per IP)
+// Persistent file storage + IP tracking + Visitor Counter
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
-let muralNotes = [
+const TMP_COUNTER_FILE = path.join(os.tmpdir(), 'stayzoo_visits.txt');
+const TMP_NOTES_FILE = path.join(os.tmpdir(), 'stayzoo_mural_notes.json');
+
+const DEFAULT_NOTES = [
   {
     id: 'note-arari-official',
     name: 'Arari Mascote 🦜',
@@ -14,17 +20,47 @@ let muralNotes = [
   }
 ];
 
-let cachedHitCount = 2;
-let lastHitCheck = 0;
+// Helper: Read Notes from Persistent File
+function getStoredNotes() {
+  try {
+    if (fs.existsSync(TMP_NOTES_FILE)) {
+      const content = fs.readFileSync(TMP_NOTES_FILE, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        if (!parsed.some(n => n.id === 'note-arari-official')) {
+          parsed.unshift(DEFAULT_NOTES[0]);
+        }
+        return parsed;
+      }
+    }
+  } catch (err) {}
+  return [...DEFAULT_NOTES];
+}
 
-async function getLiveVisitorCount() {
-  const now = Date.now();
-  if (now - lastHitCheck < 15000 && cachedHitCount > 0) {
-    return cachedHitCount;
-  }
+// Helper: Save Notes to Persistent File
+function saveStoredNotes(notes) {
+  try {
+    fs.writeFileSync(TMP_NOTES_FILE, JSON.stringify(notes, null, 2), 'utf-8');
+  } catch (err) {}
+}
+
+// Track visited IPs in this execution
+const visitedIps = new Set();
+
+// Helper: Get & Increment Real Visitor Count
+async function getLiveVisitorCount(clientIp) {
+  let count = 10;
+  try {
+    if (fs.existsSync(TMP_COUNTER_FILE)) {
+      const saved = parseInt(fs.readFileSync(TMP_COUNTER_FILE, 'utf-8'), 10);
+      if (!isNaN(saved) && saved >= 1) count = saved;
+    }
+  } catch (err) {}
+
+  // Check hits.sh to stay in sync with domain hits
   try {
     const res = await fetch('https://hits.sh/stayzoo-arari.vercel.app.svg', {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+      headers: { 'User-Agent': 'Mozilla/5.0' }
     });
     if (res.ok) {
       const text = await res.text();
@@ -32,16 +68,21 @@ async function getLiveVisitorCount() {
       if (matches && matches.length > 0) {
         const raw = matches[matches.length - 1].replace(/[><]/g, '');
         const n = parseInt(raw, 10);
-        if (!isNaN(n) && n >= 1) {
-          cachedHitCount = n;
-          lastHitCheck = now;
-        }
+        if (!isNaN(n) && n > count) count = n;
       }
     }
-  } catch (err) {
-    // Keep cached
+  } catch (err) {}
+
+  // Increment if new IP in this session
+  if (clientIp && clientIp !== 'unknown' && !visitedIps.has(clientIp)) {
+    visitedIps.add(clientIp);
+    count++;
+    try {
+      fs.writeFileSync(TMP_COUNTER_FILE, String(count), 'utf-8');
+    } catch (err) {}
   }
-  return cachedHitCount;
+
+  return count;
 }
 
 export default async function handler(req, res) {
@@ -60,11 +101,13 @@ export default async function handler(req, res) {
     .split(',')[0]
     .trim();
 
+  let notes = getStoredNotes();
+
   if (req.method === 'GET') {
-    const visitorCount = await getLiveVisitorCount();
-    const hasPosted = muralNotes.some(n => n.ip === clientIp && n.ip !== 'unknown');
+    const visitorCount = await getLiveVisitorCount(clientIp);
+    const hasPosted = notes.some(n => n.ip === clientIp && n.ip !== 'unknown');
     return res.status(200).json({
-      notes: muralNotes,
+      notes,
       clientIp,
       hasPosted,
       visitorCount
@@ -80,17 +123,6 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Nome e mensagem são obrigatórios.' });
       }
 
-      // Check if IP already posted (1 per IP rule)
-      if (clientIp !== 'unknown') {
-        const alreadyExists = muralNotes.some(n => n.ip === clientIp);
-        if (alreadyExists) {
-          return res.status(403).json({
-            error: 'Este IP já possui um Post-it fixado no mural! Apenas 1 recado por pessoa/IP.',
-            hasPosted: true
-          });
-        }
-      }
-
       const cleanName = String(name).trim().slice(0, 28);
       const cleanMsg = String(msg).trim().slice(0, 160);
       const validColors = ['#fef08a', '#fbcfe8', '#bbf7d0', '#ddd6fe', '#fed7aa', '#bae6fd'];
@@ -101,8 +133,14 @@ export default async function handler(req, res) {
       const d = new Date();
       const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 
+      // If user with same IP already posted, update their note instead of blocking
+      let existingIdx = -1;
+      if (clientIp !== 'unknown') {
+        existingIdx = notes.findIndex(n => n.ip === clientIp && n.id !== 'note-arari-official');
+      }
+
       const newNote = {
-        id: 'note-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+        id: existingIdx >= 0 ? notes[existingIdx].id : 'note-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
         name: cleanName,
         msg: cleanMsg,
         color: chosenColor,
@@ -112,12 +150,18 @@ export default async function handler(req, res) {
         ip: clientIp
       };
 
-      muralNotes.push(newNote);
+      if (existingIdx >= 0) {
+        notes[existingIdx] = newNote;
+      } else {
+        notes.push(newNote);
+      }
+
+      saveStoredNotes(notes);
 
       return res.status(201).json({
         success: true,
         note: newNote,
-        notes: muralNotes,
+        notes,
         hasPosted: true
       });
     } catch (err) {

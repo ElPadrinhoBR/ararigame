@@ -789,15 +789,16 @@ html, body {
     overflow: hidden;
   }
   #chat-stage-wrapper {
-    flex: 1;
-    min-height: 200px;
+    flex: 1 1 auto;
+    min-height: 150px;
     position: relative;
     overflow: hidden;
   }
   #chat-log-panel {
     width: 100% !important;
-    height: 180px !important;
-    flex-shrink: 0;
+    height: 165px !important;
+    max-height: 40vh;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     background: #0f0722;
@@ -805,18 +806,25 @@ html, body {
     position: relative;
     z-index: 100;
   }
+  .chat-log-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 6px 10px;
+  }
   .chat-input-row {
-    position: sticky;
+    position: relative;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 120;
     background: #180932;
-    padding: 6px 8px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid #a855f766;
+    flex-shrink: 0;
   }
   #chat-input-field {
-    font-size: 12px;
-    padding: 6px 8px;
+    font-size: 15px !important;
+    padding: 8px 10px;
   }
   .avatar-creator-layout { flex-direction: column; align-items: center; }
   .avatar-preview-box { width: 100%; }
@@ -1098,4 +1106,142 @@ html, body {
   transform: scale(1.18);
   border-color: #ffd700;
   box-shadow: 0 0 8px #ffd700;
+}
+
+
+/* ═══ Inline Post-it Form & Responsive Corkboard ═══ */
+.mural-inline-form-box {
+  margin-top: 18px;
+  background: linear-gradient(135deg, rgba(26, 16, 53, 0.95), rgba(15, 7, 34, 0.95));
+  border: 1.5px solid #a855f766;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.mural-form-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-family: 'DePixelBold', monospace;
+  font-size: 13px;
+  color: #ffd700;
+}
+.postit-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.postit-input-group label {
+  display: block;
+  font-size: 11px;
+  color: #cbd5e1;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+.postit-input-group input,
+.postit-input-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #090317;
+  border: 1.5px solid #a855f788;
+  border-radius: 8px;
+  color: #f8fafc;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+.postit-input-group input:focus,
+.postit-input-group textarea:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+.postit-char-counter {
+  text-align: right;
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+.postit-custom-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.picker-label {
+  font-size: 10px;
+  color: #cbd5e1;
+  display: block;
+  margin-bottom: 4px;
+}
+.pin-swatches {
+  display: flex;
+  gap: 8px;
+}
+.pin-color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.pin-color-swatch:hover,
+.pin-color-swatch.active {
+  transform: scale(1.2);
+  border-color: #ffd700;
+  box-shadow: 0 0 8px #ffd700;
+}
+.mural-btn-submit {
+  width: 100%;
+  padding: 12px !important;
+  font-size: 12px !important;
+  font-family: 'DePixelBold', monospace;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.mural-btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+}
+.postit-feedback {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  text-align: center;
+}
+.postit-feedback.success {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10b981;
+  color: #6ee7b7;
+}
+.postit-feedback.error {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+}
+.postit-feedback.info {
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid #38bdf8;
+  color: #7dd3fc;
+}
+
+@media (max-width: 640px) {
+  .mural-board {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 10px !important;
+    max-height: 380px !important;
+  }
+  .stay-postit {
+    width: 100% !important;
+    min-height: 120px !important;
+    transform: none !important;
+  }
 }

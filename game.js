@@ -242,11 +242,11 @@ const COLLIDERS = [
   ...SPEAKERS.map(s => ({ x: s.x - 16, y: s.y - 28, w: 32, h: 56, hard: false }))
 ];
 
-// ─── Stray Kids Members (Unified on Main Stage, Catwalk & B-Stage) ──────
+// ─── Stray Kids Members (Spread across accessible Stage, Catwalk, B-Stage & Backstage) ──────
 const MEMBERS = [
   {
     id: 0, name: 'Lee Know', skzoo: 'Leebit', role: 'Dançarino Principal / Vocal',
-    color: '#a855f7', x: 1300, y: 680, zone: 'Palco Principal', found: false,
+    color: '#a855f7', x: 1520, y: 620, zone: 'Palco Principal', found: false,
     dialogue: [
       'Olá Arari! Que alegria ver uma mascote tão expressiva aqui no palco!',
       'Gostei muito dos seus passos de asa! Já vi que você tem o ritmo e a paixão brasileira!',
@@ -255,7 +255,7 @@ const MEMBERS = [
   },
   {
     id: 1, name: 'HAN', skzoo: 'Han Quokka', role: 'All-Rounder / Rapper / Produtor',
-    color: '#f59e0b', x: 1050, y: 680, zone: 'Palco Principal', found: false,
+    color: '#f59e0b', x: 750, y: 260, zone: 'Backstage Lounge', found: false,
     dialogue: [
       'E aí, Arari! Você veio voando do Brasil até aqui?! Haha, que incrível!',
       'Ouvir a plateia brasileira cantando cada verso das nossas músicas foi surreal de emocionante!',
@@ -264,7 +264,7 @@ const MEMBERS = [
   },
   {
     id: 2, name: 'Bang Chan', skzoo: 'Wolf Chan', role: 'Líder / Produtor / Vocal',
-    color: '#ef4444', x: 1300, y: 1560, zone: 'Palco B-Stage', found: false,
+    color: '#ef4444', x: 1300, y: 1620, zone: 'Palco B-Stage', found: false,
     dialogue: [
       "G'day Arari! Que honra receber a mascote oficial dos B-STAYs no nosso show dominATE!",
       'Os fãs do Brasil são nossa grande inspiração e sempre nos dão forças para superar desafios.',
@@ -273,7 +273,7 @@ const MEMBERS = [
   },
   {
     id: 3, name: 'Felix', skzoo: 'BbokAri', role: 'Dançarino Líder / Rapper',
-    color: '#fb923c', x: 1300, y: 1200, zone: 'Passarela Central', found: false,
+    color: '#fb923c', x: 1300, y: 1140, zone: 'Passarela Central', found: false,
     dialogue: [
       'Arari! Minha grande parceira do Trio Caótico! (Arari + BbokAri + Dwaekki!)',
       'Você é incrivelmente fofa! O amor dos fãs brasileiros é tão quente e acolhedor...',
@@ -282,7 +282,7 @@ const MEMBERS = [
   },
   {
     id: 4, name: 'Seungmin', skzoo: 'PuppyM', role: 'Vocalista Principal',
-    color: '#22c55e', x: 1920, y: 680, zone: 'Asa Direita do Palco', found: false,
+    color: '#22c55e', x: 2020, y: 740, zone: 'Asa Direita do Palco', found: false,
     dialogue: [
       'Arari! Você canta bem também ou só bate as asas? Haha!',
       'A harmonia das vozes dos B-STAYs cantando nos estádios é perfeita, arrepia até a alma!',
@@ -291,7 +291,7 @@ const MEMBERS = [
   },
   {
     id: 5, name: 'I.N', skzoo: 'FoxI.Ny', role: 'Vocalista / Maknae',
-    color: '#38bdf8', x: 1300, y: 960, zone: 'Início da Passarela', found: false,
+    color: '#38bdf8', x: 1120, y: 1460, zone: 'Palco B-Stage', found: false,
     dialogue: [
       'Arari! Que mascote linda! Fiquei encantado com suas cores tropicais!',
       'Nunca imaginei ver um projeto tão carinhoso criado exclusivamente pelos fãs do Brasil!',
@@ -300,7 +300,7 @@ const MEMBERS = [
   },
   {
     id: 6, name: 'Changbin', skzoo: 'Dwaekki', role: 'Rapper Principal / Produtor',
-    color: '#f43f5e', x: 1550, y: 680, zone: 'Palco Principal', found: false,
+    color: '#f43f5e', x: 1850, y: 260, zone: 'Backstage Áudio', found: false,
     dialogue: [
       'YOH! Arari! O Dwaekki do Trio Caótico está aqui treinando firme!',
       'A força dos gritos dos B-STAYs no show fez o chão do estádio tremer de verdade!',
@@ -309,7 +309,7 @@ const MEMBERS = [
   },
   {
     id: 7, name: 'Hyunjin', skzoo: 'Jiniret', role: 'Dançarino Principal / Rapper / Visual',
-    color: '#818cf8', x: 680, y: 680, zone: 'Asa Esquerda do Palco', found: false,
+    color: '#818cf8', x: 580, y: 740, zone: 'Asa Esquerda do Palco', found: false,
     dialogue: [
       'Arari! Que espírito artístico deslumbrante você tem!',
       'A criatividade e o carinho dos fãs brasileiros tocaram profundamente o meu coração.',
@@ -563,6 +563,31 @@ class ArariGame {
       }
 
       if (this.state !== 'playing') return;
+
+      // Direct tap-to-talk: Tapping a member immediately initiates conversation!
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      const canvasX = (touch.clientX - rect.left) * scaleX;
+      const canvasY = (touch.clientY - rect.top) * scaleY;
+      const worldX = (canvasX / (this.zoom * this.dpr)) + this.camera.x;
+      const worldY = (canvasY / (this.zoom * this.dpr)) + this.camera.y;
+
+      const tappedMember = this.members.find(m => Math.hypot(m.x - worldX, m.y - worldY) < 70);
+      if (tappedMember) {
+        e.preventDefault();
+        this.sound.init();
+        const dx = tappedMember.x - this.arari.x;
+        const dy = tappedMember.y - this.arari.y;
+        this.arari.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+        if (Math.hypot(dx, dy) > 85) {
+          this.arari.x = tappedMember.x - Math.sign(dx || 1) * 45;
+          this.arari.y = tappedMember.y - Math.sign(dy || 1) * 35;
+        }
+        this.startDialogue(tappedMember);
+        return;
+      }
+
       if (touchId !== null) return; // already tracking a move touch
 
       e.preventDefault();
@@ -708,6 +733,40 @@ class ArariGame {
     const btnDiagNext = document.getElementById('dialogue-btn-next');
     if (btnDiagNext) btnDiagNext.addEventListener('click', () => this.advanceDialogue());
 
+    const diagBox = document.getElementById('dialogue-box');
+    if (diagBox) {
+      diagBox.addEventListener('click', () => this.advanceDialogue());
+    }
+
+    this.canvas.addEventListener('click', (e) => {
+      if (this.state === 'dialogue') {
+        this.advanceDialogue();
+        return;
+      }
+      if (this.state !== 'playing') return;
+
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      const canvasX = (e.clientX - rect.left) * scaleX;
+      const canvasY = (e.clientY - rect.top) * scaleY;
+      const worldX = (canvasX / (this.zoom * this.dpr)) + this.camera.x;
+      const worldY = (canvasY / (this.zoom * this.dpr)) + this.camera.y;
+
+      const target = this.members.find(m => Math.hypot(m.x - worldX, m.y - worldY) < 70);
+      if (target) {
+        this.sound.init();
+        const dx = target.x - this.arari.x;
+        const dy = target.y - this.arari.y;
+        this.arari.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+        if (Math.hypot(dx, dy) > 85) {
+          this.arari.x = target.x - Math.sign(dx || 1) * 45;
+          this.arari.y = target.y - Math.sign(dy || 1) * 35;
+        }
+        this.startDialogue(target);
+      }
+    });
+
     const btnReplay = document.getElementById('btn-replay');
     if (btnReplay) btnReplay.addEventListener('click', () => this.resetGame());
   }
@@ -824,7 +883,7 @@ class ArariGame {
         img.style.filter = m.found ? 'none' : 'grayscale(1) opacity(0.6)';
 
         const textSpan = document.createElement('span');
-        textSpan.textContent = m.found ? m.name : '???';
+        textSpan.textContent = m.found ? m.name : '??????';
         if (m.found) textSpan.style.color = m.color;
 
         item.appendChild(img);
@@ -1249,14 +1308,20 @@ class ArariGame {
         }
       }
 
-      ctx.font = 'bold 9px DePixelBold, monospace';
       ctx.textAlign = 'center';
-      ctx.fillStyle = m.found ? '#ffd700' : '#ffffff';
-      ctx.fillText(m.found ? `★ ${m.name}` : `? ${m.name}`, m.x, m.y + 36);
+      if (m.found) {
+        ctx.font = 'bold 9px DePixelBold, monospace';
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText(`★ ${m.name}`, m.x, m.y + 36);
 
-      ctx.font = '7px DePixel, monospace';
-      ctx.fillStyle = m.color;
-      ctx.fillText(`(${m.skzoo})`, m.x, m.y + 46);
+        ctx.font = '7px DePixel, monospace';
+        ctx.fillStyle = m.color;
+        ctx.fillText(`(${m.skzoo})`, m.x, m.y + 46);
+      } else {
+        ctx.font = 'bold 9px DePixelBold, monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('??????', m.x, m.y + 36);
+      }
       ctx.textAlign = 'left';
     }
   }

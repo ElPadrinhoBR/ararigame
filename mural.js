@@ -137,26 +137,16 @@ class StayMuralController {
   }
 
   setupUI() {
-    const btnOpen = document.getElementById('btn-open-add-postit');
-    const modal = document.getElementById('mural-modal');
-    const btnClose = document.getElementById('btn-close-mural-modal');
-    const btnSubmit = document.getElementById('btn-submit-postit');
+    const form = document.getElementById('postit-inline-form');
     const nameInput = document.getElementById('postit-name-input');
     const msgInput = document.getElementById('postit-msg-input');
     const charCounter = document.getElementById('postit-char-counter');
 
-    if (btnOpen) {
-      btnOpen.addEventListener('click', () => {
-        if (this.hasPosted) {
-          alert('⚠️ Você já fixou seu Post-it neste mural! Cada Stay tem direito a 1 recadinho permanente para caber todo mundo.');
-          return;
-        }
-        if (modal) modal.classList.remove('hidden');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handlePostItSubmit();
       });
-    }
-
-    if (btnClose && modal) {
-      btnClose.addEventListener('click', () => modal.classList.add('hidden'));
     }
 
     if (msgInput && charCounter) {
@@ -168,40 +158,51 @@ class StayMuralController {
       });
     }
 
-    // Color pickers
+    // Color swatches
     document.querySelectorAll('.postit-color-swatch').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         document.querySelectorAll('.postit-color-swatch').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.selectedColor = btn.dataset.color || '#fef08a';
       });
     });
 
-    if (btnSubmit) {
-      btnSubmit.addEventListener('click', () => this.handlePostItSubmit());
-    }
+    // Pin swatches
+    document.querySelectorAll('.pin-color-swatch').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.pin-color-swatch').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.selectedPin = btn.dataset.pin || '#ef4444';
+      });
+    });
   }
 
   async handlePostItSubmit() {
-    if (this.hasPosted) {
-      alert('⚠️ Você já fixou um Post-it neste mural! Apenas 1 recado por pessoa/IP.');
-      return;
-    }
-
     const nameInput = document.getElementById('postit-name-input');
     const msgInput = document.getElementById('postit-msg-input');
-    const modal = document.getElementById('mural-modal');
+    const feedback = document.getElementById('postit-feedback');
 
     const name = nameInput ? nameInput.value.trim() : '';
     const msg = msgInput ? msgInput.value.trim() : '';
 
     if (!name || name.length < 2) {
-      alert('Por favor, informe seu nome ou apelido Stay (mínimo 2 letras).');
+      if (feedback) {
+        feedback.textContent = '⚠️ Por favor, informe seu nome ou apelido Stay (mínimo 2 letras).';
+        feedback.className = 'postit-feedback error';
+      }
       return;
     }
     if (!msg || msg.length < 3) {
-      alert('Por favor, escreva um recadinho carinhoso para fixar no mural.');
+      if (feedback) {
+        feedback.textContent = '⚠️ Por favor, escreva um recadinho carinhoso para fixar no mural.';
+        feedback.className = 'postit-feedback error';
+      }
       return;
+    }
+
+    if (feedback) {
+      feedback.textContent = '📌 Fixando seu recadinho permanente no mural...';
+      feedback.className = 'postit-feedback info';
     }
 
     const d = new Date();
@@ -225,19 +226,21 @@ class StayMuralController {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newNote)
       });
-      if (res.status === 403) {
-        alert('⚠️ Este IP já fixou um Post-it no mural! Apenas 1 recado por pessoa/IP.');
-        this.hasPosted = true;
-        this.updateActionArea();
-        if (modal) modal.classList.add('hidden');
-        return;
+      const data = await res.json();
+      if (data && data.notes) {
+        this.notes = data.notes;
+      } else {
+        const existingIdx = this.notes.findIndex(n => n.id === newNote.id || (this.clientIp && n.ip === this.clientIp));
+        if (existingIdx >= 0) this.notes[existingIdx] = newNote;
+        else this.notes.push(newNote);
       }
     } catch (e) {
-      // Fallback: save locally
+      // Local fallback
+      const existingIdx = this.notes.findIndex(n => n.id === newNote.id);
+      if (existingIdx >= 0) this.notes[existingIdx] = newNote;
+      else this.notes.push(newNote);
     }
 
-    // Save locally
-    this.notes.push(newNote);
     this.hasPosted = true;
     this.myNoteId = newNote.id;
     localStorage.setItem('stayzoo_mural_notes', JSON.stringify(this.notes));
@@ -250,12 +253,16 @@ class StayMuralController {
       } catch (e) {}
     }
 
-    if (modal) modal.classList.add('hidden');
-    if (nameInput) nameInput.value = '';
     if (msgInput) msgInput.value = '';
+    const charCounter = document.getElementById('postit-char-counter');
+    if (charCounter) charCounter.textContent = '140 restantes';
+
+    if (feedback) {
+      feedback.textContent = '✨ Post-it fixado com sucesso! Sua mensagem está permanente no mural!';
+      feedback.className = 'postit-feedback success';
+    }
 
     this.renderBoard();
-    this.updateActionArea();
 
     // Scroll to the new note with animation
     setTimeout(() => {

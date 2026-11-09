@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Stayzoo Arari: dominATE Concert Mission | Stray Kids Fan Portal</title>
   <meta name="description" content="Portal oficial da comunidade B-Stay Brasil com o jogo dominATE Concert Mission e o ChatPoint visual estilo Humor Tadela!">
-  <link rel="stylesheet" href="style.css?v=8.9.1">
+  <link rel="stylesheet" href="style.css?v=9.0">
   <link rel="icon" type="image/png" href="assets/arari/profile_arari.png">
 </head>
 <body>
@@ -27,7 +27,7 @@
           <div class="visitor-counter-box" title="Total de visitas recebidas no portal">
             <span class="visitor-badge-icon">👁️</span>
             <span class="visitor-badge-label">VISITAS:</span>
-            <span class="visitor-odometer" id="visitor-odometer">000.001</span>
+            <span class="visitor-odometer" id="visitor-odometer">000.010</span>
           </div>
         </div>
 
@@ -57,14 +57,14 @@
           </button>
         </div>
 
-        <!-- 📌 Mural Stay de Post-its Permanente (1 recado por IP) -->
+        <!-- 📌 Mural Stay de Post-its Permanente -->
         <div class="stay-mural-container">
           <div class="mural-header">
             <div class="mural-title-row">
               <span class="mural-icon">📌</span>
-              <h3 class="mural-title">MURAL DOS STAYS • RECADO PERMANENTE</h3>
+              <h3 class="mural-title">MURAL DOS STAYS • RECADOS PERMANENTES</h3>
             </div>
-            <p class="mural-subtitle">Deixe sua marquinha de carinho para o Stray Kids e a Arari! (1 post-it por pessoa/IP)</p>
+            <p class="mural-subtitle">Deixe sua marquinha de carinho para o Stray Kids e a Arari! Recadinhos permanentes guardados com amor.</p>
           </div>
 
           <!-- Post-it Corkboard -->
@@ -72,11 +72,55 @@
             <!-- Os post-its são renderizados aqui via mural.js -->
           </div>
 
-          <!-- Ação para Adicionar Post-it -->
-          <div class="mural-action-area" id="mural-action-area">
-            <button id="btn-open-add-postit" class="btn-primary mural-btn-add">
-              📌 Deixar Meu Recadinho Permanente (1 por IP)
-            </button>
+          <!-- Formulário Aberto / Entrada de Novos Post-its Adaptada para Celular e PC -->
+          <div class="mural-inline-form-box" id="mural-inline-form-box">
+            <div class="mural-form-header">
+              <span class="mural-form-icon">✍️</span>
+              <span class="mural-form-title">Fixar Novo Post-it no Mural</span>
+            </div>
+            <form id="postit-inline-form" class="postit-form-body">
+              <div class="postit-input-group">
+                <label for="postit-name-input">Seu Nome ou Apelido Stay:</label>
+                <input type="text" id="postit-name-input" maxlength="28" placeholder="Ex: Bia Stay, Felix Fan, B-Stay..." required autocomplete="off">
+              </div>
+
+              <div class="postit-input-group">
+                <label for="postit-msg-input">Seu Recadinho de Carinho:</label>
+                <textarea id="postit-msg-input" maxlength="140" rows="3" placeholder="Ex: dominATE São Paulo vai ser histórico! Te amamos Stray Kids e Arari! 🇧🇷✨" required></textarea>
+                <div id="postit-char-counter" class="postit-char-counter">140 restantes</div>
+              </div>
+
+              <div class="postit-custom-row">
+                <div class="postit-color-picker">
+                  <span class="picker-label">Cor do Post-it:</span>
+                  <div class="postit-swatches">
+                    <button type="button" class="postit-color-swatch active" data-color="#fef08a" style="background:#fef08a;" title="Amarelo Sol"></button>
+                    <button type="button" class="postit-color-swatch" data-color="#fbcfe8" style="background:#fbcfe8;" title="Rosa Pastel"></button>
+                    <button type="button" class="postit-color-swatch" data-color="#bbf7d0" style="background:#bbf7d0;" title="Verde Menta"></button>
+                    <button type="button" class="postit-color-swatch" data-color="#ddd6fe" style="background:#ddd6fe;" title="Roxo Lilás"></button>
+                    <button type="button" class="postit-color-swatch" data-color="#fed7aa" style="background:#fed7aa;" title="Pêssego"></button>
+                    <button type="button" class="postit-color-swatch" data-color="#bae6fd" style="background:#bae6fd;" title="Azul Céu"></button>
+                  </div>
+                </div>
+
+                <div class="postit-pin-picker">
+                  <span class="picker-label">Alfinete:</span>
+                  <div class="pin-swatches">
+                    <button type="button" class="pin-color-swatch active" data-pin="#ef4444" style="background:#ef4444;" title="Vermelho"></button>
+                    <button type="button" class="pin-color-swatch" data-pin="#3b82f6" style="background:#3b82f6;" title="Azul"></button>
+                    <button type="button" class="pin-color-swatch" data-pin="#10b981" style="background:#10b981;" title="Verde"></button>
+                    <button type="button" class="pin-color-swatch" data-pin="#f59e0b" style="background:#f59e0b;" title="Dourado"></button>
+                    <button type="button" class="pin-color-swatch" data-pin="#8b5cf6" style="background:#8b5cf6;" title="Roxo"></button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="postit-feedback" class="postit-feedback hidden"></div>
+
+              <button type="submit" id="btn-submit-postit" class="btn-primary mural-btn-submit">
+                📌 Fixar Meu Post-it Permanente
+              </button>
+            </form>
           </div>
         </div>
 
@@ -429,43 +473,7 @@
       </div>
     </section>
 
-    <!-- 📌 Modal para Escrever Post-it no Mural -->
-    <div id="mural-modal" class="modal-overlay hidden">
-      <div class="modal-card" style="max-width:440px;">
-        <h2 style="color:#ffd700;">📌 Deixar Post-it no Mural Stay</h2>
-        <p style="font-size:11px;color:#94a3b8;margin:4px 0 14px 0;">
-          Escreva uma mensagem de apoio ao Stray Kids e à Arari! Cada pessoa/IP pode fixar 1 post-it permanente.
-        </p>
 
-        <div style="text-align:left;margin-bottom:12px;">
-          <label style="font-size:10px;color:#cbd5e1;display:block;margin-bottom:4px;">Seu Nome ou Apelido Stay:</label>
-          <input type="text" id="postit-name-input" maxlength="28" placeholder="Ex: Bia Stay, Felix Fan..." style="width:100%;box-sizing:border-box;background:#0d0320;border:1px solid #a855f7;color:#fff;padding:8px;border-radius:6px;font-size:12px;">
-        </div>
-
-        <div style="text-align:left;margin-bottom:12px;">
-          <label style="font-size:10px;color:#cbd5e1;display:block;margin-bottom:4px;">Seu Recadinho (máx 140 letras):</label>
-          <textarea id="postit-msg-input" maxlength="140" rows="3" placeholder="Ex: dominATE São Paulo vai ser histórico! Te amamos Arari e Stray Kids! 🇧🇷✨" style="width:100%;box-sizing:border-box;background:#0d0320;border:1px solid #a855f7;color:#fff;padding:8px;border-radius:6px;font-size:12px;resize:none;"></textarea>
-          <div id="postit-char-counter" style="text-align:right;font-size:9px;color:#94a3b8;margin-top:2px;">140 restantes</div>
-        </div>
-
-        <div style="text-align:left;margin-bottom:16px;">
-          <label style="font-size:10px;color:#cbd5e1;display:block;margin-bottom:4px;">Cor do seu Post-it:</label>
-          <div class="postit-swatches">
-            <button class="postit-color-swatch active" data-color="#fef08a" style="background:#fef08a;" title="Amarelo Sol"></button>
-            <button class="postit-color-swatch" data-color="#fbcfe8" style="background:#fbcfe8;" title="Rosa Pastel"></button>
-            <button class="postit-color-swatch" data-color="#bbf7d0" style="background:#bbf7d0;" title="Verde Menta"></button>
-            <button class="postit-color-swatch" data-color="#ddd6fe" style="background:#ddd6fe;" title="Roxo Lilás"></button>
-            <button class="postit-color-swatch" data-color="#fed7aa" style="background:#fed7aa;" title="Pêssego"></button>
-            <button class="postit-color-swatch" data-color="#bae6fd" style="background:#bae6fd;" title="Azul Céu"></button>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:10px;">
-          <button id="btn-submit-postit" class="btn-primary" style="flex:1;">📌 Fixar no Mural</button>
-          <button id="btn-close-mural-modal" class="hud-btn" style="flex:1;">Cancelar</button>
-        </div>
-      </div>
-    </div>
 
     <!-- YouTube DJ Player Container (visible small player in DJ modal area) -->
     <div id="youtube-player-container" style="position:fixed;bottom:0;right:0;width:1px;height:1px;overflow:hidden;z-index:-1;">
@@ -510,9 +518,9 @@
   </script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="mural.js?v=8.9.1"></script>
-  <script src="chat.js?v=8.9.1"></script>
-  <script src="game.js?v=8.9.1"></script>
+  <script src="mural.js?v=9.0"></script>
+  <script src="chat.js?v=9.0"></script>
+  <script src="game.js?v=9.0"></script>
 
   <!-- View Router Script -->
   <script>
