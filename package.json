@@ -1,0 +1,12 @@
+{
+  "name": "ararigame",
+  "version": "1.0.0",
+  "description": "Stayzoo Arari: dominATE Concert Mission - Stray Kids Fan Game",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["straykids", "skzoo", "arari", "bstay", "game", "kpop"],
+  "author": "B-Stay Brazil",
+  "license": "MIT"
+}

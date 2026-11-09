@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Stayzoo Arari: dominATE Concert Mission | Stray Kids Fan Portal</title>
+  <meta name="description" content="Portal oficial da comunidade B-Stay Brasil com o jogo dominATE Concert Mission e o ChatPoint visual estilo Humor Tadela!">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="assets/arari/profile_arari.png">
+</head>
+<body>
+  <div id="app-container">
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         1. LANDING SCREEN (Menu Inicial com 2 Opções)
+         ═══════════════════════════════════════════════════════════════ -->
+    <section id="view-landing" class="app-view active-view">
+      <div class="landing-card">
+        <div class="landing-header">
+          <img src="assets/official/straykids-logo.png" alt="Stray Kids" class="landing-skz-logo">
+          <h1 class="landing-title">dominATE WORLD TOUR</h1>
+          <div class="landing-mascot-row">
+            <img src="assets/arari/profile_arari.png" alt="Arari Mascote" class="landing-arari-icon">
+            <span class="landing-mascot-label">B-STAY BRASIL • STAYZOO ARARI</span>
+          </div>
+        </div>
+
+        <p class="landing-desc">
+          Bem-vindo ao portal da comunidade brasileira de Stray Kids! Escolha uma das opções abaixo:
+        </p>
+
+        <div class="landing-options">
+          <!-- Option 1: Play Game -->
+          <button id="btn-goto-game" class="menu-choice-btn game-choice">
+            <div class="choice-icon">🎮</div>
+            <div class="choice-text">
+              <h3>JOGAR MISSÃO dominATE</h3>
+              <p>Explore o estádio com a Arari, desvie de obstáculos, colete corações e encontre os 8 membros do Stray Kids!</p>
+            </div>
+            <div class="choice-arrow">➔</div>
+          </button>
+
+          <!-- Option 2: Enter Visual Chatpoint -->
+          <button id="btn-goto-chat" class="menu-choice-btn chat-choice">
+            <div class="choice-icon">💬</div>
+            <div class="choice-text">
+              <h3>ENTRAR NO CHATPOINT B-STAY</h3>
+              <p>Crie seu avatar em pixel-art (estilo Humor Tadela), converse no lounge dos fãs com a Arari em tempo real!</p>
+            </div>
+            <div class="choice-arrow">➔</div>
+          </button>
+        </div>
+
+        <div class="landing-footer">
+          <span>🇧🇷 Criado com amor pela B-Stay Brasil • 2025</span>
+          <a href="https://www.instagram.com/arari.br/" target="_blank" rel="noopener" class="footer-link">Instagram @arari.br 📸</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         2. GAME VIEW (O Jogo dominATE da Arari)
+         ═══════════════════════════════════════════════════════════════ -->
+    <section id="view-game" class="app-view hidden">
+      <!-- Top HUD -->
+      <header id="hud-top">
+        <div class="hud-left">
+          <button id="btn-game-back" class="hud-btn" title="Voltar ao Menu Inicial">🏠 Menu</button>
+          <div class="arari-badge">
+            <img src="assets/arari/profile_arari.png" alt="Arari" class="arari-icon">
+            <div class="badge-text">
+              <span class="badge-title">STAYZOO ARARI</span>
+              <span class="badge-sub">dominATE TOUR 🇧🇷⚡</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div class="score-block">
+            <span class="score-label">PTS</span>
+            <span id="score-display" class="score-value">0</span>
+          </div>
+          <div class="members-block">
+            <span class="members-label">MEMBROS</span>
+            <span id="members-counter" class="members-counter">0/8</span>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <!-- Music & Volume Slider -->
+          <div class="music-controller">
+            <button id="btn-music-toggle" class="hud-btn music-btn" title="Tocar / Pausar Playlist dominATE">
+              <span id="music-icon">♪</span>
+              <span class="music-label">Música</span>
+            </button>
+            <div class="volume-slider-box" title="Volume da Música">
+              <span class="vol-icon">🔈</span>
+              <input type="range" id="volume-slider" min="0" max="100" value="25">
+              <span id="volume-label" class="vol-label">25%</span>
+            </div>
+          </div>
+
+          <button id="btn-zoom" class="hud-btn" title="Alternar Zoom da Câmera">🔍</button>
+          <button id="btn-sound" class="hud-btn" title="Efeitos Sonoros">🔊</button>
+          <button id="btn-fly" class="hud-btn" title="Voar (F / Shift)">🪽</button>
+          <button id="btn-help" class="hud-btn" title="Como Jogar">?</button>
+        </div>
+      </header>
+
+      <!-- Side Panel: Members List -->
+      <aside id="side-panel">
+        <div class="panel-title">🎤 MEMBROS SKZ</div>
+        <div id="members-list" class="members-list"></div>
+      </aside>
+
+      <!-- Main Canvas Container -->
+      <main id="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="interaction-hint" class="interaction-hint hidden">
+          Pressione [X] para falar!
+        </div>
+
+        <!-- Dialogue Box -->
+        <div id="dialogue-box" class="dialogue-box hidden">
+          <div class="dialogue-inner">
+            <div class="dialogue-portrait" id="dialogue-portrait">
+              <img id="dialogue-avatar" src="assets/arari/profile_arari.png" alt="Avatar">
+            </div>
+            <div class="dialogue-content">
+              <div id="dialogue-speaker" class="dialogue-speaker">???</div>
+              <p id="dialogue-text" class="dialogue-text">...</p>
+              <div class="dialogue-footer">
+                <span class="dialogue-hint">Pressione [ESPAÇO / X] ou clique para avançar</span>
+                <button id="dialogue-btn-next" class="dialogue-next-btn">Continuar ➔</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tribute Finale Modal -->
+        <div id="tribute-modal" class="modal-overlay hidden">
+          <div class="modal-card tribute-card">
+            <div class="tribute-header">
+              <img src="assets/official/straykids-logo.png" alt="Stray Kids" class="tribute-skz-logo">
+              <div class="tribute-sparkle">✨ MISSÃO COMPLETA! ✨</div>
+              <h2>HOMENAGEM B-STAY BRASIL</h2>
+              <p class="tribute-subtitle">Todos os 8 membros receberam a homenagem dos fãs do Brasil!</p>
+            </div>
+            <div class="tribute-letter">
+              <h3>💌 Carta para o Stray Kids:</h3>
+              <p>
+                "Bang Chan, Lee Know, Changbin, Hyunjin, HAN, Felix, Seungmin e I.N — 
+                a energia de vocês cruza oceanos e faz o coração dos B-STAYs bater mais forte! 
+                A Arari, nossa mascote Araruja, veio representar cada fã brasileiro: 
+                <strong>O Brasil ama o Stray Kids e sempre voará alto com vocês!</strong>"
+              </p>
+              <div class="tribute-signatures">
+                <span>🇧🇷 Fandom B-Stay Oficial</span>
+                <span>🦜 Projeto Stayzoo Arari (@arari.br)</span>
+              </div>
+            </div>
+            <div class="tribute-actions">
+              <button id="btn-replay" class="btn-primary">Jogar Novamente 🔄</button>
+              <a href="https://www.instagram.com/arari.br/" target="_blank" rel="noopener" class="btn-primary" style="text-decoration:none;background:#e1306c;">Instagram @arari.br 📸</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="help-modal" class="modal-overlay hidden">
+          <div class="modal-card">
+            <h2>🎮 Como Jogar</h2>
+            <div class="help-grid">
+              <span class="help-key">Teclado</span>
+              <span>WASD ou Setas para mover a Arari</span>
+              <span class="help-key">Celular</span>
+              <span>Touchpad circular na esquerda para andar</span>
+              <span class="help-key">F / Shift / 🪽</span>
+              <span>Ativar voo (Voo de Araruja pula obstáculos!)</span>
+              <span class="help-key">Botão [X] / Espaço</span>
+              <span>Falar com membros e avançar diálogos</span>
+              <span class="help-key">🔍 Zoom</span>
+              <span>Aproximar ou afastar a visão do estádio</span>
+              <span class="help-key">🔈 Volume</span>
+              <span>Ajustar o som da playlist dominATE</span>
+            </div>
+            <p class="help-mission">
+              <strong>Missão:</strong> Explore o estádio dominATE e encontre os <strong>8 membros do Stray Kids</strong>!
+              Desvie das caixas de som e postes, use as escadas para subir ao palco e curta a música! 🦜💜
+            </p>
+            <button id="btn-close-help" class="btn-primary">Vamos lá! 🚀</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- ═══ Mobile Authentic Virtual Touchpad & Controls (matching official SKZ game) ═══ -->
+      <div id="mobile-touch-controls">
+        <!-- Circular Analog Touchpad -->
+        <div id="touchpad-zone" class="touchpad-zone">
+          <div id="touchpad-base" class="touchpad-base">
+            <div id="touchpad-knob" class="touchpad-knob"></div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="touch-action-buttons">
+          <button id="btn-action-fly" class="touch-btn-fly" title="Voar">🪽</button>
+          <button id="btn-action-x" class="touch-btn-x" title="Interagir / Falar">
+            <span class="pixel-x-text">X</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         3. CHATPOINT VIEW (Chat Visual Estilo Humor Tadela)
+         ═══════════════════════════════════════════════════════════════ -->
+    <section id="view-chat" class="app-view hidden">
+      <header id="chat-header">
+        <div class="chat-header-left">
+          <button id="btn-chat-back" class="hud-btn">🏠 Menu</button>
+          <span class="chat-header-title">💬 ChatPoint B-Stay • Lounge VIP</span>
+        </div>
+        <div class="chat-header-right">
+          <button id="btn-open-customizer" class="hud-btn" title="Personalizar Avatar">👤 Mudar Avatar</button>
+        </div>
+      </header>
+
+      <!-- Main Scenic Chatroom -->
+      <div id="chat-main-container">
+        <!-- Visual Room Canvas -->
+        <div id="chat-stage-wrapper">
+          <canvas id="chatCanvas"></canvas>
+          <div class="chat-click-hint">Clique ou toque no chão para andar! 👆</div>
+        </div>
+
+        <!-- Chat Log Drawer (Right Side) -->
+        <div id="chat-log-panel">
+          <div class="chat-log-header">BATE-PAPO GLOBAL B-STAY (COM ARARI)</div>
+          <div id="chat-log" class="chat-log-body">
+            <div class="chat-log-item system">
+              <span class="chat-log-name">Sistema:</span> Bem-vindo ao Lounge VIP B-Stay! Toque na sala para andar e converse com a Arari e outras STAYs!
+            </div>
+          </div>
+          <!-- Input Form -->
+          <form id="chat-input-form" class="chat-input-row">
+            <input type="text" id="chat-input-field" placeholder="Escreva sua mensagem de Stay..." maxlength="80" autocomplete="off">
+            <button type="submit" id="btn-chat-send" class="btn-primary">Enviar</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Avatar Creator Modal (Humor Tadela Style) -->
+      <div id="avatar-creator-modal" class="modal-overlay hidden">
+        <div class="modal-card avatar-creator-card">
+          <h2>🎨 Crie seu Avatar Stay (Humor Tadela)</h2>
+          <div class="avatar-creator-layout">
+            <!-- Left: Live Preview -->
+            <div class="avatar-preview-box">
+              <canvas id="avatar-preview-canvas" width="128" height="128"></canvas>
+              <div class="avatar-preview-tag">Prévia do Personagem</div>
+            </div>
+
+            <!-- Right: Customizer Controls -->
+            <div class="avatar-controls-box">
+              <div class="avatar-control-group">
+                <label>Seu Nome de STAY:</label>
+                <input type="text" id="avatar-nickname-input" value="B-Stay Brasil" maxlength="15">
+              </div>
+
+              <div class="avatar-control-group">
+                <label>Gênero:</label>
+                <div class="btn-group">
+                  <button class="avatar-gender-btn active" data-gender="female">Feminino ♀</button>
+                  <button class="avatar-gender-btn" data-gender="male">Masculino ♂</button>
+                </div>
+              </div>
+
+              <div class="avatar-control-group">
+                <label>Tom de Pele:</label>
+                <div class="color-palette-row">
+                  <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#ffe0bd" style="background:#ffe0bd;"></button>
+                  <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#ffd1b3" style="background:#ffd1b3;"></button>
+                  <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#dca180" style="background:#dca180;"></button>
+                  <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#8d5524" style="background:#8d5524;"></button>
+                </div>
+              </div>
+
+              <div class="avatar-control-group">
+                <label>Penteado:</label>
+                <div class="btn-grid">
+                  <button class="avatar-opt-btn" data-type="hairStyle" data-value="twin_buns">Coques K-pop</button>
+                  <button class="avatar-opt-btn" data-type="hairStyle" data-value="long_wavy">Longo Ondulado</button>
+                  <button class="avatar-opt-btn" data-type="hairStyle" data-value="curtain_kpop">Franja Cortina</button>
+                  <button class="avatar-opt-btn" data-type="hairStyle" data-value="undercut">Undercut</button>
+                </div>
+              </div>
+
+              <div class="avatar-control-group">
+                <label>Cor do Cabelo:</label>
+                <div class="color-palette-row">
+                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#1a1a1a" style="background:#1a1a1a;"></button>
+                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#4a2c11" style="background:#4a2c11;"></button>
+                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#e6be8a" style="background:#e6be8a;"></button>
+                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#f472b6" style="background:#f472b6;"></button>
+                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#38bdf8" style="background:#38bdf8;"></button>
+                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#a855f7" style="background:#a855f7;"></button>
+                </div>
+              </div>
+
+              <div class="avatar-control-group">
+                <label>Figurino:</label>
+                <div class="btn-grid">
+                  <button class="avatar-opt-btn" data-type="outfit" data-value="dominate_jacket">Jaqueta dominATE</button>
+                  <button class="avatar-opt-btn" data-type="outfit" data-value="bstay_hoodie">Moletom B-Stay</button>
+                  <button class="avatar-opt-btn" data-type="outfit" data-value="tour_tee">Camiseta SKZ</button>
+                </div>
+              </div>
+
+              <div class="avatar-control-group">
+                <label>Acessório:</label>
+                <div class="btn-grid">
+                  <button class="avatar-opt-btn" data-type="accessory" data-value="nachimbong">Nachimbong (Lightstick)</button>
+                  <button class="avatar-opt-btn" data-type="accessory" data-value="cat_ears">Orelhas SKZOO</button>
+                  <button class="avatar-opt-btn" data-type="accessory" data-value="headphones">Fones DJ</button>
+                  <button class="avatar-opt-btn" data-type="accessory" data-value="none">Nenhum</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-save-avatar-enter" class="btn-primary" style="margin-top:16px;width:100%;">
+            Pronto! Entrar no Lounge VIP 🚀
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hidden YouTube Background Player -->
+    <div id="youtube-player-container" style="position:fixed;width:1px;height:1px;left:-9999px;opacity:0;pointer-events:none;">
+      <div id="yt-player"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="chat.js"></script>
+  <script src="game.js"></script>
+
+  <!-- View Router Script -->
+  <script>
+    function showView(viewId) {
+      document.querySelectorAll('.app-view').forEach(v => {
+        v.classList.remove('active-view');
+        v.classList.add('hidden');
+      });
+      const target = document.getElementById(viewId);
+      if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('active-view');
+      }
+
+      if (viewId === 'view-game') {
+        window.initArariGame();
+        if (window._arariGame) window._arariGame.resize();
+        if (window.ytPlayer && window.ytPlayer.playVideo) {
+          try { window.ytPlayer.setVolume(25); window.ytPlayer.playVideo(); } catch(e){}
+        }
+      } else if (viewId === 'view-chat') {
+        window.initChatPoint();
+        if (window._chatPoint) window._chatPoint.resize();
+        // Show avatar creator modal on entry so STAYs customize avatar/nickname
+        const modal = document.getElementById('avatar-creator-modal');
+        if (modal) modal.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('btn-goto-game').addEventListener('click', () => showView('view-game'));
+    document.getElementById('btn-goto-chat').addEventListener('click', () => showView('view-chat'));
+    document.getElementById('btn-game-back').addEventListener('click', () => showView('view-landing'));
+    document.getElementById('btn-chat-back').addEventListener('click', () => showView('view-landing'));
+
+    document.getElementById('btn-help').addEventListener('click', () => {
+      document.getElementById('help-modal').classList.toggle('hidden');
+    });
+    document.getElementById('btn-close-help').addEventListener('click', () => {
+      document.getElementById('help-modal').classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
