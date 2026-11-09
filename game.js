@@ -453,17 +453,11 @@ class ArariGame {
       this.assets.arariSheet = img;
     }));
 
-    // Transparent Stage Props & Objects
-    promises.push(this.loadImage('assets/official/skz_arch_clean.png').then(img => { this.assets.skzArch = img; }));
-    promises.push(this.loadImage('assets/official/cyber_neon_wall.png').then(img => { this.assets.cyberWall = img; }));
-    promises.push(this.loadImage('assets/official/barricade_official.png').then(img => { this.assets.barricade = img; }));
-    promises.push(this.loadImage('assets/official/security_guard_official.png').then(img => { this.assets.securityGuard = img; }));
+    // Metal Barricade (Clean high-res pixel-art)
+    promises.push(this.loadImage('assets/official/metal_barricade.png').then(img => { this.assets.barricade = img; }));
     promises.push(this.loadImage('assets/official/stage_edge_lamp.png').then(img => { this.assets.edgeLamp = img; }));
     promises.push(this.loadImage('assets/official/glass_planter.png').then(img => { this.assets.glassPlanter = img; }));
-    promises.push(this.loadImage('assets/official/diagonal_stairs.png').then(img => { this.assets.diagStairs = img; }));
     promises.push(this.loadImage('assets/official/stacked_crates.png').then(img => { this.assets.stackedCrates = img; }));
-    promises.push(this.loadImage('assets/official/stage_spotlight_beams.png').then(img => { this.assets.spotlightBeams = img; }));
-    promises.push(this.loadImage('assets/official/metal_truss.png').then(img => { this.assets.metalTruss = img; }));
 
     // Props & Tiles
     for (const name of ['speaker', 'light_pole', 'stairs']) {
@@ -1079,26 +1073,17 @@ class ArariGame {
   }
 
   drawStadium(ctx, vx, vy, vw, vh, now) {
-    // 1. Arena Base Floor
-    ctx.fillStyle = '#0a0618';
+    // 1. Arena Base Floor (Clean, deep stadium floor)
+    ctx.fillStyle = '#0a0818';
     ctx.fillRect(0, 0, WORLD_W, WORLD_H);
 
-    // 2. Blinking Concert Lights in Crowd Zones
-    this.drawCrowdLights(ctx, vx, vy, vw, vh, now);
-
-    // 3. Backstage Floor
+    // 2. Backstage Floor
     if (this.patterns.backstage) {
       ctx.fillStyle = this.patterns.backstage;
       ctx.fillRect(200, 80, 2200, 360);
     }
 
-    // 4. Left Wing Area (rebaixada)
-    if (this.patterns.wing_skz) {
-      ctx.fillStyle = this.patterns.wing_skz;
-      ctx.fillRect(100, 460, 280, 440);
-    }
-
-    // 5. UNIFIED STAGE PLATFORM (Main Stage + Catwalk + B-Stage)
+    // 3. UNIFIED STAGE PLATFORM (Main Stage + Catwalk Runway + Extended B-Stage)
     if (this.patterns.stage_skz) {
       ctx.fillStyle = this.patterns.stage_skz;
       // Main Stage
@@ -1108,85 +1093,17 @@ class ArariGame {
       // Extended B-Stage
       ctx.fillRect(1020, 1370, 560, 350);
     } else {
-      ctx.fillStyle = '#324258';
+      ctx.fillStyle = '#223046';
       ctx.fillRect(380, 460, 1840, 450);
       ctx.fillRect(1180, 910, 240, 460);
       ctx.fillRect(1020, 1370, 560, 350);
     }
 
-    // Stage Edge Subtle Border
-    ctx.strokeStyle = '#435875';
-    ctx.lineWidth = 2;
+    // Stage Edge Sleek Neon Glow & Border
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.lineWidth = 3;
     ctx.strokeRect(380, 460, 1840, 450);
     ctx.strokeRect(1020, 1370, 560, 350);
-
-    // 6. Top Cyber LED Monitor Wall
-    const cyberWall = this.assets.cyberWall;
-    if (cyberWall && cyberWall.complete) {
-      for (let wx = 380; wx < 2200; wx += 435) {
-        ctx.drawImage(cyberWall, wx, 416, 435, 46);
-      }
-    }
-
-    // 7. Transparent Giant Chrome STRAY KIDS Arch Statue (Centered over Stage Entrance!)
-    const arch = this.assets.skzArch;
-    if (arch && arch.complete) {
-      ctx.drawImage(arch, 1125, 385, 350, 145);
-    }
-
-    // 8. Overhead Concert Spotlights
-    const beams = this.assets.spotlightBeams;
-    if (beams && beams.complete) {
-      ctx.globalAlpha = 0.5 + 0.2 * Math.sin(now * 0.002);
-      ctx.drawImage(beams, 450, 420, 800, 170);
-      ctx.drawImage(beams, 1350, 420, 800, 170);
-      ctx.globalAlpha = 1.0;
-    }
-  }
-
-  // Blinking, twinkling concert lights representing the audience
-  drawCrowdLights(ctx, vx, vy, vw, vh, now) {
-    const colors = ['#ffffff', '#38bdf8', '#e879f9', '#ffd700', '#4ade80', '#fb923c'];
-    const t = now * 0.003;
-
-    // Left Crowd Zone
-    for (let cy = 930; cy < 1780; cy += 42) {
-      for (let cx = 80; cx < 1140; cx += 42) {
-        if (cx >= vx && cx <= vx + vw && cy >= vy && cy <= vy + vh) {
-          const seed = cx * 13.17 + cy * 17.83;
-          const pulse = Math.sin(t + seed);
-          if (pulse > 0.15) {
-            const alpha = 0.25 + 0.7 * ((pulse + 1) / 2);
-            const color = colors[Math.floor(Math.abs(seed) % colors.length)];
-            ctx.fillStyle = color;
-            ctx.globalAlpha = alpha;
-            ctx.beginPath();
-            ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-    }
-
-    // Right Crowd Zone
-    for (let cy = 930; cy < 1780; cy += 42) {
-      for (let cx = 1460; cx < 2520; cx += 42) {
-        if (cx >= vx && cx <= vx + vw && cy >= vy && cy <= vy + vh) {
-          const seed = cx * 13.17 + cy * 17.83;
-          const pulse = Math.sin(t + seed);
-          if (pulse > 0.15) {
-            const alpha = 0.25 + 0.7 * ((pulse + 1) / 2);
-            const color = colors[Math.floor(Math.abs(seed) % colors.length)];
-            ctx.fillStyle = color;
-            ctx.globalAlpha = alpha;
-            ctx.beginPath();
-            ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-    }
-    ctx.globalAlpha = 1.0;
   }
 
   drawSpeakerSoundwaves(ctx, now) {
@@ -1238,16 +1155,7 @@ class ArariGame {
       });
     }
 
-    // 3. Security Guards — removed, boundary is marked by barricade lights only
-
-    // 4. Stage Stairs (authentic pair at stage entrances)
-    const diagStairs = this.assets.diagStairs;
-    if (diagStairs && diagStairs.complete) {
-      ctx.drawImage(diagStairs, 380, 870, 90, 40);  // Left stage entrance
-      ctx.drawImage(diagStairs, 2130, 870, 90, 40); // Right stage entrance
-    }
-
-    // 5. Backstage Equipment Crates (backstage area only, not on the open stage)
+    // 3. Backstage Equipment Crates (backstage area only, not on the open stage)
     const crates = this.assets.stackedCrates;
     if (crates && crates.complete) {
       ctx.drawImage(crates, 220, 220, 100, 70);
