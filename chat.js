@@ -340,7 +340,7 @@ class ChatPointRoom {
     this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
 
     this.arariSheet = new Image();
-    this.arariSheet.src = 'assets/arari/arari_spritesheet.png';
+    this.arariSheet.src = 'assets/arari/arari_spritesheet.png?v=8.1';
 
     this.stageTile = new Image();
     this.stageTile.src = 'assets/tiles/tile_stage_skz.png';

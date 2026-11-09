@@ -455,7 +455,7 @@ class ArariGame {
     const promises = [];
 
     // Arari Spritesheet
-    promises.push(this.loadImage('assets/arari/arari_spritesheet.png').then(img => {
+    promises.push(this.loadImage('assets/arari/arari_spritesheet.png?v=8.1').then(img => {
       this.assets.arariSheet = img;
     }));
 
@@ -522,22 +522,18 @@ class ArariGame {
     }));
   }
 
-  // ─── Touch Controls for Mobile ─────────────────────────────────────────
+  // ─── Touch Controls for Mobile (Full-Screen Dynamic Touchpad) ─────────
   setupMobileTouchpad() {
     const joyZone = document.getElementById('touchpad-zone');
     const joyKnob = document.getElementById('touchpad-knob');
-    if (!joyZone || !joyKnob) return;
-
-    const maxRadius = 38;
+    const maxRadius = 42;
     let touchId = null;
+    let touchOriginX = 0;
+    let touchOriginY = 0;
 
     const handleMove = (clientX, clientY) => {
-      const rect = joyZone.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      let dx = clientX - centerX;
-      let dy = clientY - centerY;
+      let dx = clientX - touchOriginX;
+      let dy = clientY - touchOriginY;
       const dist = Math.hypot(dx, dy);
 
       if (dist > maxRadius) {
@@ -545,17 +541,56 @@ class ArariGame {
         dy = (dy / dist) * maxRadius;
       }
 
-      joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+      if (joyKnob) {
+        joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+
+      // Set velocity
       this.touchJoystick.moveX = dx / maxRadius;
       this.touchJoystick.moveY = dy / maxRadius;
-      this.touchJoystick.active = true;
+      this.touchJoystick.active = (dist > 6);
     };
 
-    joyZone.addEventListener('touchstart', (e) => {
+    // Allow touching ANYWHERE on the game canvas / screen to move
+    window.addEventListener('touchstart', (e) => {
+      const touch = e.changedTouches[0];
+      const target = e.target;
+
+      // Ignore touch if interacting with action buttons, menu, or modals
+      if (
+        target.closest('#touch-action-buttons') ||
+        target.closest('#hud') ||
+        target.closest('.modal-card') ||
+        target.closest('#menu-panel')
+      ) {
+        return;
+      }
+
+      // In dialogue state, tapping anywhere advances dialogue
+      if (this.state === 'dialogue') {
+        e.preventDefault();
+        this.sound.init();
+        this.advanceDialogue();
+        return;
+      }
+
+      if (this.state !== 'playing') return;
+      if (touchId !== null) return; // already tracking a move touch
+
       e.preventDefault();
       this.sound.init();
-      const touch = e.changedTouches[0];
+
       touchId = touch.identifier;
+      touchOriginX = touch.clientX;
+      touchOriginY = touch.clientY;
+
+      if (joyZone) {
+        joyZone.style.opacity = '1';
+        joyZone.style.left = `${touchOriginX - 54}px`;
+        joyZone.style.top = `${touchOriginY - 54}px`;
+        joyZone.style.position = 'fixed';
+      }
+
       handleMove(touch.clientX, touch.clientY);
     }, { passive: false });
 
@@ -575,7 +610,13 @@ class ArariGame {
       for (let i = 0; i < e.changedTouches.length; i++) {
         if (e.changedTouches[i].identifier === touchId) {
           touchId = null;
-          joyKnob.style.transform = 'translate(0px, 0px)';
+          if (joyKnob) joyKnob.style.transform = 'translate(0px, 0px)';
+          if (joyZone) {
+            joyZone.style.opacity = '0.35';
+            joyZone.style.position = '';
+            joyZone.style.left = '';
+            joyZone.style.top = '';
+          }
           this.touchJoystick.moveX = 0;
           this.touchJoystick.moveY = 0;
           this.touchJoystick.active = false;
@@ -592,6 +633,7 @@ class ArariGame {
     if (btnX) {
       const triggerX = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         this.sound.init();
         if (this.state === 'dialogue') {
           this.advanceDialogue();
@@ -608,6 +650,7 @@ class ArariGame {
     if (btnFly) {
       const triggerFly = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         this.sound.init();
         this.arari.flying = !this.arari.flying;
         this.addParticles(this.arari.x, this.arari.y, '#38bdf8', 8);
@@ -1293,7 +1336,7 @@ class ArariGame {
     const sheet = this.assets.arariSheet;
 
     const FRAME_SIZE = 96;
-    const DISPLAY_SIZE = 56;
+    const DISPLAY_SIZE = 58;
 
     // Gentle footstep bob while moving on the ground
     const walkBob = (moving && !flying) ? Math.sin(now * 0.02) * 2 : 0;
@@ -1301,39 +1344,47 @@ class ArariGame {
     ctx.save();
     ctx.translate(Math.floor(x), Math.floor(y + walkBob));
 
+    // Flip horizontally if facing left (facing === 3)
+    const flip = (facing === 3);
+
     if (sheet) {
       let row = 0;
       let col = 0;
 
       if (dancing) {
-        row = 5;
-        col = Math.floor(now * 0.008) % 5;
+        // Quarta linha: Comemoração/Vitória, batendo as asas com alegria (4 frames)
+        row = 3;
+        col = Math.floor(now * 0.008) % 4;
       } else if (flying) {
-        row = 4;
+        // Terceira linha: Animação de pulo/voo (Jumping), preparação, subida asas abertas e pouso (5 frames)
+        row = 2;
         col = Math.floor(now * 0.01) % 5;
       } else if (moving) {
-        row = facing;
-        if (facing === 0 || facing === 1) {
-          // Down & Up walk: alternate crisply stepping paws
-          col = animFrame % 4;
-        } else {
-          // Right (row 2), Left (row 3): full 5-frame side walk cycle with paws stepping forward & push off
-          col = animFrame % 5;
-        }
+        // Segunda linha: Animação de caminhada (Walking), movimentando as patinhas e as asas de perfil/diagonal (5 frames)
+        row = 1;
+        col = animFrame % 5;
       } else {
-        // Idle breathing: stay in idle posture, occasional happy wink
+        // Primeira linha: Animação dela parada (Idle), piscando e mexendo as asinhas de frente (4 frames)
         row = 0;
-        col = (Math.floor(now * 0.001) % 6 === 5) ? 3 : 0;
+        col = Math.floor(now * 0.003) % 4;
       }
 
       const sx = col * FRAME_SIZE;
       const sy = row * FRAME_SIZE;
+
+      if (flip && moving) {
+        ctx.scale(-1, 1);
+      }
 
       ctx.drawImage(
         sheet,
         sx, sy, FRAME_SIZE, FRAME_SIZE,
         -DISPLAY_SIZE / 2, -DISPLAY_SIZE / 2, DISPLAY_SIZE, DISPLAY_SIZE
       );
+
+      if (flip && moving) {
+        ctx.scale(-1, 1);
+      }
     }
 
     ctx.font = 'bold 8px DePixelBold, monospace';
