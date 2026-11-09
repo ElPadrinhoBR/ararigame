@@ -85,6 +85,9 @@ class StayMuralController {
         }
         if (data.clientIp) this.clientIp = data.clientIp;
         if (data.hasPosted) this.hasPosted = true;
+        if (data.visitorCount) {
+          this.displayVisitorCount(data.visitorCount);
+        }
       }
     } catch (e) {
       // Offline fallback
@@ -339,51 +342,26 @@ class StayMuralController {
     }
   }
 
-  initVisitorCounter() {
+  displayVisitorCount(count) {
     const odo = document.getElementById('visitor-odometer');
     if (!odo) return;
-
-    const renderCount = (count) => {
-      const num = parseInt(count, 10);
-      if (!isNaN(num) && num >= 1) {
-        const padded = String(num).padStart(6, '0');
-        odo.textContent = padded.slice(0, 3) + '.' + padded.slice(3);
-      }
-    };
-
-    // Avoid double counting refreshes in the same user session
-    const sessionCount = sessionStorage.getItem('stayzoo_visit_count');
-    if (sessionCount) {
-      renderCount(sessionCount);
-      return;
+    const num = parseInt(count, 10);
+    if (!isNaN(num) && num >= 1) {
+      const padded = String(num).padStart(6, '0');
+      odo.textContent = padded.slice(0, 3) + '.' + padded.slice(3);
     }
+  }
 
-    // Register real visit on hits.sh for the production site stayzoo-arari.vercel.app
-    fetch('https://hits.sh/stayzoo-arari.vercel.app.svg')
-      .then(res => res.text())
-      .then(svg => {
-        const matches = svg.match(/>(\d+)</g);
-        if (matches && matches.length > 0) {
-          const rawNum = matches[matches.length - 1].replace(/[><]/g, '');
-          renderCount(rawNum);
-          sessionStorage.setItem('stayzoo_visit_count', rawNum);
+  initVisitorCounter() {
+    // Read secure visitorCount directly from /api/mural (no browser CORS issues)
+    fetch('/api/mural')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.visitorCount) {
+          this.displayVisitorCount(data.visitorCount);
         }
       })
-      .catch(() => {
-        fetch('https://visitor-badge.laobi.icu/badge?page_id=stayzoo-arari-official-2026')
-          .then(res => res.text())
-          .then(svg => {
-            const matches = svg.match(/>(\d+)</g);
-            if (matches && matches.length > 0) {
-              const rawNum = matches[matches.length - 1].replace(/[><]/g, '');
-              renderCount(rawNum);
-              sessionStorage.setItem('stayzoo_visit_count', rawNum);
-            }
-          })
-          .catch(() => {
-            renderCount(1);
-          });
-      });
+      .catch(() => {});
   }
 
   escapeHTML(str) {

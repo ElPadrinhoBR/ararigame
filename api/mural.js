@@ -14,6 +14,36 @@ let muralNotes = [
   }
 ];
 
+let cachedHitCount = 2;
+let lastHitCheck = 0;
+
+async function getLiveVisitorCount() {
+  const now = Date.now();
+  if (now - lastHitCheck < 15000 && cachedHitCount > 0) {
+    return cachedHitCount;
+  }
+  try {
+    const res = await fetch('https://hits.sh/stayzoo-arari.vercel.app.svg', {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+    });
+    if (res.ok) {
+      const text = await res.text();
+      const matches = text.match(/>(\d+)</g);
+      if (matches && matches.length > 0) {
+        const raw = matches[matches.length - 1].replace(/[><]/g, '');
+        const n = parseInt(raw, 10);
+        if (!isNaN(n) && n >= 1) {
+          cachedHitCount = n;
+          lastHitCheck = now;
+        }
+      }
+    }
+  } catch (err) {
+    // Keep cached
+  }
+  return cachedHitCount;
+}
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,11 +61,13 @@ export default async function handler(req, res) {
     .trim();
 
   if (req.method === 'GET') {
+    const visitorCount = await getLiveVisitorCount();
     const hasPosted = muralNotes.some(n => n.ip === clientIp && n.ip !== 'unknown');
     return res.status(200).json({
       notes: muralNotes,
       clientIp,
-      hasPosted
+      hasPosted,
+      visitorCount
     });
   }
 
