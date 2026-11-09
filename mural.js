@@ -3,64 +3,14 @@
 
 const DEFAULT_SEED_NOTES = [
   {
-    id: 'note-seed-1',
-    name: 'B-Stay Oficial 🇧🇷',
-    msg: 'Bem-vindos ao portal dominATE! Vamos fazer o show no Brasil ser o mais barulhento do mundo!',
+    id: 'note-arari-official',
+    name: 'Arari Mascote 🦜',
+    msg: 'Sejam bem-vindos ao Mural dos Stays! Deixe seu recadinho de carinho para o Stray Kids brilhar no Brasil! 🇧🇷✨',
     color: '#fef08a',
     pinColor: '#ef4444',
-    rotation: -2,
-    date: '08/11/2026',
-    ip: 'seed-1'
-  },
-  {
-    id: 'note-seed-2',
-    name: 'Lari Stay 🦜',
-    msg: 'A Arari ficou a mascote mais linda e fofa que já vi! Parabéns a toda equipe!',
-    color: '#fbcfe8',
-    pinColor: '#3b82f6',
-    rotation: 1.5,
-    date: '08/11/2026',
-    ip: 'seed-2'
-  },
-  {
-    id: 'note-seed-3',
-    name: 'Felix Fan ☀️',
-    msg: 'Yongbok te amamos! Seu carisma ilumina tudo! dominATE Brasil!',
-    color: '#bbf7d0',
-    pinColor: '#f59e0b',
-    rotation: -1,
+    rotation: -1.5,
     date: '09/11/2026',
-    ip: 'seed-3'
-  },
-  {
-    id: 'note-seed-4',
-    name: 'Chan Leader 🐺',
-    msg: 'Stray Kids everywhere all around the world! You make Stray Kids STAY!',
-    color: '#ddd6fe',
-    pinColor: '#10b981',
-    rotation: 2.5,
-    date: '09/11/2026',
-    ip: 'seed-4'
-  },
-  {
-    id: 'note-seed-5',
-    name: 'Dwaekki Power 🐷🐰',
-    msg: 'Changbin jutdae! Ansiosa demais pro show no estádio!',
-    color: '#fed7aa',
-    pinColor: '#ec4899',
-    rotation: -2,
-    date: '09/11/2026',
-    ip: 'seed-5'
-  },
-  {
-    id: 'note-seed-6',
-    name: 'Quokka Lu 🐿️',
-    msg: 'HAN Jisung suas letras tocam nossa alma! Ansiosa pela turnê!',
-    color: '#bae6fd',
-    pinColor: '#8b5cf6',
-    rotation: 1,
-    date: '09/11/2026',
-    ip: 'seed-6'
+    ip: 'arari-mascote-official'
   }
 ];
 
@@ -90,12 +40,17 @@ class StayMuralController {
     try {
       const savedNotes = localStorage.getItem('stayzoo_mural_notes');
       if (savedNotes) {
-        this.notes = JSON.parse(savedNotes);
+        const parsed = JSON.parse(savedNotes);
+        // Remove old dummy seed notes, keep only real user notes + arari note
+        this.notes = parsed.filter(n => !n.id.startsWith('note-seed-'));
+        if (!this.notes.some(n => n.id === 'note-arari-official')) {
+          this.notes.unshift(DEFAULT_SEED_NOTES[0]);
+        }
       } else {
         this.notes = [...DEFAULT_SEED_NOTES];
       }
       this.myNoteId = localStorage.getItem('stayzoo_mural_my_note_id') || '';
-      if (this.myNoteId) {
+      if (this.myNoteId && this.myNoteId !== 'note-arari-official') {
         this.hasPosted = true;
       }
     } catch (e) {
@@ -120,10 +75,11 @@ class StayMuralController {
       if (res.ok) {
         const data = await res.json();
         if (data.notes && Array.isArray(data.notes)) {
-          // Merge server notes with seed notes without duplicates
+          // Filter out any legacy dummy seed notes from server response
+          const cleanServerNotes = data.notes.filter(n => !n.id.startsWith('note-seed-'));
           const map = new Map();
-          DEFAULT_SEED_NOTES.forEach(n => map.set(n.id, n));
-          data.notes.forEach(n => map.set(n.id, n));
+          map.set(DEFAULT_SEED_NOTES[0].id, DEFAULT_SEED_NOTES[0]);
+          cleanServerNotes.forEach(n => map.set(n.id, n));
           this.notes = Array.from(map.values());
           localStorage.setItem('stayzoo_mural_notes', JSON.stringify(this.notes));
         }
@@ -131,12 +87,12 @@ class StayMuralController {
         if (data.hasPosted) this.hasPosted = true;
       }
     } catch (e) {
-      // Offline or local server without /api/mural
+      // Offline fallback
     }
 
-    // Check if clientIp already has a note in this.notes
+    // Check if clientIp already has a note in this.notes (excluding arari note)
     if (this.clientIp) {
-      const found = this.notes.find(n => n.ip === this.clientIp);
+      const found = this.notes.find(n => n.ip === this.clientIp && n.id !== 'note-arari-official');
       if (found) {
         this.hasPosted = true;
         this.myNoteId = found.id;
@@ -167,7 +123,7 @@ class StayMuralController {
           try {
             const note = JSON.parse(payload.toString());
             if (note && note.id && !this.notes.some(n => n.id === note.id)) {
-              this.notes.unshift(note);
+              this.notes.push(note);
               localStorage.setItem('stayzoo_mural_notes', JSON.stringify(this.notes));
               this.renderBoard();
             }
@@ -278,7 +234,7 @@ class StayMuralController {
     }
 
     // Save locally
-    this.notes.unshift(newNote);
+    this.notes.push(newNote);
     this.hasPosted = true;
     this.myNoteId = newNote.id;
     localStorage.setItem('stayzoo_mural_notes', JSON.stringify(this.notes));
@@ -322,11 +278,21 @@ class StayMuralController {
       el.style.transform = `rotate(${note.rotation || 0}deg)`;
 
       const isMine = (note.id === this.myNoteId || (this.clientIp && note.ip === this.clientIp));
+      const isOfficialArari = (note.id === 'note-arari-official');
+
       if (isMine) el.classList.add('my-postit');
+      if (isOfficialArari) el.classList.add('arari-official-postit');
+
+      let badgeHtml = '';
+      if (isOfficialArari) {
+        badgeHtml = '<span class="postit-badge-mine" style="background:#f59e0b;color:#000;">OFICIAL MASCOTE</span>';
+      } else if (isMine) {
+        badgeHtml = '<span class="postit-badge-mine">SEU RECADO</span>';
+      }
 
       el.innerHTML = `
         <div class="postit-pin" style="background:${note.pinColor || '#ef4444'};"></div>
-        ${isMine ? '<span class="postit-badge-mine">SEU RECADO</span>' : ''}
+        ${badgeHtml}
         <div class="postit-header">
           <span class="postit-author">${this.escapeHTML(note.name)}</span>
           <span class="postit-date">${note.date || ''}</span>
@@ -377,8 +343,8 @@ class StayMuralController {
     const odo = document.getElementById('visitor-odometer');
     if (!odo) return;
 
-    // Fetch live count from visitor-badge.laobi.icu SVG
-    fetch('https://visitor-badge.laobi.icu/badge?page_id=stayzoo-arari')
+    // Reset counter to start fresh from real visitors count (no fake numbers)
+    fetch('https://visitor-badge.laobi.icu/badge?page_id=stayzoo-arari-official-2026')
       .then(res => res.text())
       .then(svg => {
         const matches = svg.match(/>(\d+)</g);
@@ -386,17 +352,14 @@ class StayMuralController {
           const rawNum = matches[matches.length - 1].replace(/[><]/g, '');
           const count = parseInt(rawNum, 10);
           if (!isNaN(count)) {
-            // Format as 6 digits with comma (ex: 001,482)
-            const padded = String(count + 1380).padStart(6, '0');
+            // Real count starting from 1 (ex: 000.001)
+            const padded = String(count).padStart(6, '0');
             odo.textContent = padded.slice(0, 3) + '.' + padded.slice(3);
           }
         }
       })
       .catch(() => {
-        // Fallback realistic counter if offline
-        const count = 1420 + Math.floor(Math.random() * 15);
-        const padded = String(count).padStart(6, '0');
-        odo.textContent = padded.slice(0, 3) + '.' + padded.slice(3);
+        odo.textContent = '000.001';
       });
   }
 

@@ -3,54 +3,14 @@
 
 let muralNotes = [
   {
-    id: 'note-seed-1',
-    name: 'B-Stay Oficial 🇧🇷',
-    msg: 'Bem-vindos ao portal dominATE! Vamos fazer o show no Brasil ser o mais barulhento do mundo!',
+    id: 'note-arari-official',
+    name: 'Arari Mascote 🦜',
+    msg: 'Sejam bem-vindos ao Mural dos Stays! Deixe seu recadinho de carinho para o Stray Kids brilhar no Brasil! 🇧🇷✨',
     color: '#fef08a',
     pinColor: '#ef4444',
-    rotation: -2,
-    date: '08/11/2026',
-    ip: 'seed-1'
-  },
-  {
-    id: 'note-seed-2',
-    name: 'Lari Stay 🦜',
-    msg: 'A Arari ficou a mascote mais linda e fofa que já vi! Parabéns a toda equipe!',
-    color: '#fbcfe8',
-    pinColor: '#3b82f6',
-    rotation: 1.5,
-    date: '08/11/2026',
-    ip: 'seed-2'
-  },
-  {
-    id: 'note-seed-3',
-    name: 'Felix Fan ☀️',
-    msg: 'Yongbok te amamos! Seu carisma ilumina tudo! dominATE Brasil!',
-    color: '#bbf7d0',
-    pinColor: '#f59e0b',
-    rotation: -1,
+    rotation: -1.5,
     date: '09/11/2026',
-    ip: 'seed-3'
-  },
-  {
-    id: 'note-seed-4',
-    name: 'Chan Leader 🐺',
-    msg: 'Stray Kids everywhere all around the world! You make Stray Kids STAY!',
-    color: '#ddd6fe',
-    pinColor: '#10b981',
-    rotation: 2.5,
-    date: '09/11/2026',
-    ip: 'seed-4'
-  },
-  {
-    id: 'note-seed-5',
-    name: 'Dwaekki Power 🐷🐰',
-    msg: 'Changbin jutdae! Ansiosa demais pro show no estádio!',
-    color: '#fed7aa',
-    pinColor: '#ec4899',
-    rotation: -2,
-    date: '09/11/2026',
-    ip: 'seed-5'
+    ip: 'arari-mascote-official'
   }
 ];
 
