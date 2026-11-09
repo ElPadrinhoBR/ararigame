@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Stayzoo Arari: dominATE Concert Mission | Stray Kids Fan Portal</title>
   <meta name="description" content="Portal oficial da comunidade B-Stay Brasil com o jogo dominATE Concert Mission e o ChatPoint visual estilo Humor Tadela!">
-  <link rel="stylesheet" href="style.css?v=8.5">
+  <link rel="stylesheet" href="style.css?v=8.6">
   <link rel="icon" type="image/png" href="assets/arari/profile_arari.png">
 </head>
 <body>
@@ -392,6 +392,7 @@
           </div>
 
           <div style="display:flex;gap:10px;margin-top:14px;">
+            <button id="btn-dj-play" class="hud-btn" style="flex:1;background:#16a34a;" onclick="(function(){var yt=window.ytPlayer||window._chatPoint&&window._chatPoint.ytPlayer;if(yt){try{yt.playVideo();}catch(e){}}if(window._chatPoint)window._chatPoint._ytPendingPlay=false;})()">▶ Tocar Agora</button>
             <button id="btn-dj-skip" class="hud-btn" style="flex:1;">⏭ Próxima Música</button>
             <button id="btn-close-dj" class="btn-primary" style="flex:1;">Fechar Mesa</button>
           </div>
@@ -399,17 +400,51 @@
       </div>
     </section>
 
-    <!-- Hidden YouTube Background Player -->
-    <div id="youtube-player-container" style="position:fixed;width:1px;height:1px;left:-9999px;opacity:0;pointer-events:none;">
+    <!-- YouTube DJ Player Container (visible small player in DJ modal area) -->
+    <div id="youtube-player-container" style="position:fixed;bottom:0;right:0;width:1px;height:1px;overflow:hidden;z-index:-1;">
       <div id="yt-player"></div>
     </div>
   </div>
 
   <!-- Scripts -->
+  <script>
+    // Initialize YouTube IFrame Player API
+    function onYouTubeIframeAPIReady() {
+      window.ytPlayer = new YT.Player('yt-player', {
+        height: '1',
+        width: '1',
+        videoId: 'gGzpAi8-8mU',
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          rel: 0
+        },
+        events: {
+          onReady: function(e) {
+            e.target.setVolume(70);
+            console.log('[DJ] YouTube player ready');
+            // Notify chat system player is ready
+            if (window._chatPoint && window._chatPoint.onYtPlayerReady) {
+              window._chatPoint.onYtPlayerReady(e.target);
+            }
+          },
+          onStateChange: function(e) {
+            // Auto-advance queue when track ends (state 0 = ended)
+            if (e.data === 0 && window._chatPoint) {
+              window._chatPoint.skipDjTrack();
+            }
+          }
+        }
+      });
+    }
+  </script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="chat.js?v=8.5"></script>
-  <script src="game.js?v=8.5"></script>
+  <script src="chat.js?v=8.6"></script>
+  <script src="game.js?v=8.6"></script>
 
   <!-- View Router Script -->
   <script>

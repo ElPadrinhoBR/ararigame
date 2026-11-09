@@ -401,6 +401,8 @@ class ChatPointRoom {
 
     this.heartbeatTimer = 0;
     this.mqttClient = null;
+    this.ytPlayer = null;
+    this._ytPendingPlay = false;
 
     this.setupMQTT();
     this.setupUI();
@@ -408,8 +410,28 @@ class ChatPointRoom {
     this.resize();
     window.addEventListener('resize', () => this.resize());
 
+    // If YouTube player already initialized, grab it
+    if (window.ytPlayer) this.ytPlayer = window.ytPlayer;
+
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this.loop(t));
+  }
+
+  // Called by onYouTubeIframeAPIReady when player is ready
+  onYtPlayerReady(player) {
+    this.ytPlayer = player;
+    try {
+      player.loadVideoById(this.djState.currentTrack.id);
+      player.setVolume(70);
+      this._ytPendingPlay = true;
+    } catch(e) {}
+  }
+
+  // Trigger playback after first user gesture (browser autoplay policy)
+  _ensureYtPlaying() {
+    if (this.ytPlayer && this._ytPendingPlay) {
+      try { this.ytPlayer.playVideo(); this._ytPendingPlay = false; } catch(e) {}
+    }
   }
 
   loadUserAvatar() {
@@ -644,8 +666,12 @@ class ChatPointRoom {
         }
       };
 
-      this.canvas.addEventListener('click', (e) => handleStageClick(e.clientX, e.clientY));
+      this.canvas.addEventListener('click', (e) => {
+        this._ensureYtPlaying(); // First click = user gesture = allow audio
+        handleStageClick(e.clientX, e.clientY);
+      });
       this.canvas.addEventListener('touchstart', (e) => {
+        this._ensureYtPlaying(); // First touch = user gesture = allow audio
         if (e.touches && e.touches[0]) {
           handleStageClick(e.touches[0].clientX, e.touches[0].clientY);
         }
@@ -762,6 +788,7 @@ class ChatPointRoom {
 
     if (btnAddSong && songInput) {
       btnAddSong.addEventListener('click', () => {
+        this._ensureYtPlaying(); // User gesture -> allow autoplay
         const query = songInput.value.trim();
         if (query) {
           this.addSongToDjQueue(query);
@@ -848,8 +875,13 @@ class ChatPointRoom {
         dj: next.requestedBy
       };
 
-      if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') {
-        try { window.ytPlayer.loadVideoById(next.id); } catch(e){}
+      const yt = this.ytPlayer || window.ytPlayer;
+      if (yt && typeof yt.loadVideoById === 'function') {
+        try {
+          yt.loadVideoById(next.id);
+          yt.setVolume(70);
+          yt.playVideo();
+        } catch(e){}
       }
 
       this.addLogMessage('Mesa DJ 🎧', `Tocando agora: ${next.title} (pedido por ${next.requestedBy})`);

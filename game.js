@@ -970,11 +970,13 @@ class ArariGame {
         if (!this.checkCollision(this.arari.x, nextY)) this.arari.y = nextY;
 
         // Animate legs and wings crisply
+        // frameDuration controls animation FPS: 0.055 = ~18fps for walk, 0.065 for fly
         this.arari.animTimer += dt;
-        const frameDuration = this.arari.flying ? 0.07 : 0.09;
+        const frameDuration = this.arari.flying ? 0.065 : 0.055;
         if (this.arari.animTimer >= frameDuration) {
           this.arari.animTimer = 0;
-          this.arari.animFrame = (this.arari.animFrame + 1) % 10;
+          // Keep mod 5 so the frame number directly maps to sprite columns (0-4)
+          this.arari.animFrame = (this.arari.animFrame + 1) % 5;
         }
       } else {
         this.arari.animFrame = 0;
@@ -1374,7 +1376,8 @@ class ArariGame {
     ctx.restore();
 
     // Gentle footstep bob while moving on the ground (or float lift when flying)
-    const walkBob = flying ? -6 + Math.sin(now * 0.006) * 3 : ((moving) ? Math.sin(now * 0.02) * 1.5 : 0);
+    // Increased amplitude (3px) for clearly visible walking rhythm
+    const walkBob = flying ? -6 + Math.sin(now * 0.006) * 3 : ((moving) ? Math.sin(now * 0.025) * 3 : 0);
 
     ctx.save();
     ctx.translate(Math.floor(x), Math.floor(y + walkBob));
@@ -1406,20 +1409,20 @@ class ArariGame {
       } else if (moving) {
         // Walking in all 8 directions:
         switch (facing) {
-          case 0: // Down: Row 2 (3/4 walk cycle with active stepping paws)
-          case 4: // Down-Right: Row 2 (3/4 walk cycle)
-          case 5: // Down-Left: Row 2 (3/4 walk cycle, flipped)
+          case 0: // Down: Row 2 (3/4 walk cycle with active stepping paws, 5 frames)
+          case 4: // Down-Right: Row 2
+          case 5: // Down-Left: Row 2 (flipped)
             row = 2;
             col = animFrame % 5;
             break;
-          case 1: // Up: Row 3 (Back walk cycle with stepping paws)
-          case 6: // Up-Right (Row 3)
-          case 7: // Up-Left (Row 3, flipped)
+          case 1: // Up: Row 3 (Back walk cycle, 4 frames)
+          case 6: // Up-Right
+          case 7: // Up-Left (flipped)
             row = 3;
             col = animFrame % 4;
             break;
-          case 2: // Right: Row 1 (Side walk 5 frames)
-          case 3: // Left: Row 1 (Side walk 5 frames, flipped)
+          case 2: // Right: Row 1 (Side walk, 5 frames)
+          case 3: // Left: Row 1 (flipped, 5 frames)
           default:
             row = 1;
             col = animFrame % 5;
