@@ -1313,17 +1313,17 @@ class ArariGame {
         col = Math.floor(now * 0.01) % 5;
       } else if (moving) {
         row = facing;
-        if (facing === 0) {
-          // Downward walk: alternate crisply between frame 0 (feet together) and frame 1 (step forward)
-          col = animFrame % 2;
+        if (facing === 0 || facing === 1) {
+          // Down & Up walk: alternate crisply stepping paws
+          col = animFrame % 4;
         } else {
-          // Up (row 1), Right (row 2), Left (row 3): cycle 5 walk frames
+          // Right (row 2), Left (row 3): full 5-frame side walk cycle with paws stepping forward & push off
           col = animFrame % 5;
         }
       } else {
-        // Idle breathing
+        // Idle breathing: stay in idle posture, occasional happy wink
         row = 0;
-        col = Math.floor(now * 0.002) % 2;
+        col = (Math.floor(now * 0.001) % 6 === 5) ? 3 : 0;
       }
 
       const sx = col * FRAME_SIZE;

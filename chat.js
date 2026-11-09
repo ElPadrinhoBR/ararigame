@@ -848,8 +848,24 @@ class ChatPointRoom {
     if (this.arariSheet.complete && this.arariSheet.naturalWidth > 0) {
       const FRAME_SIZE = 96;
       const DISPLAY_SIZE = 54;
-      const col = a.isWalking ? Math.floor(now * 0.008) % 5 : Math.floor(now * 0.002) % 2;
-      const row = 0;
+      
+      let row = 0;
+      let col = 0;
+      
+      if (a.isWalking) {
+        const dx = a.targetX - a.x;
+        const dy = a.targetY - a.y;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          row = dx > 0 ? 2 : 3; // 2: Right walk, 3: Left walk with stepping paws
+          col = Math.floor(now * 0.008) % 5;
+        } else {
+          row = dy > 0 ? 0 : 1; // 0: Down walk, 1: Up walk
+          col = Math.floor(now * 0.008) % 4;
+        }
+      } else {
+        row = 0;
+        col = (Math.floor(now * 0.001) % 6 === 5) ? 3 : 0;
+      }
 
       ctx.drawImage(
         this.arariSheet,
