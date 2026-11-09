@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Stayzoo Arari: dominATE Concert Mission | Stray Kids Fan Portal</title>
   <meta name="description" content="Portal oficial da comunidade B-Stay Brasil com o jogo dominATE Concert Mission e o ChatPoint visual estilo Humor Tadela!">
-  <link rel="stylesheet" href="style.css?v=8.4">
+  <link rel="stylesheet" href="style.css?v=8.5">
   <link rel="icon" type="image/png" href="assets/arari/profile_arari.png">
 </head>
 <body>
@@ -223,6 +223,7 @@
           <span class="chat-header-title">💬 ChatPoint B-Stay • Lounge VIP</span>
         </div>
         <div class="chat-header-right">
+          <button id="btn-open-dj" class="hud-btn" style="color:#ffd700;border-color:#ffd700;background:rgba(234,179,8,0.2);">🎧 Mesa DJ</button>
           <button id="btn-open-customizer" class="hud-btn" title="Personalizar Avatar">👤 Mudar Avatar</button>
         </div>
       </header>
@@ -269,62 +270,90 @@
                 <input type="text" id="avatar-nickname-input" value="B-Stay Brasil" maxlength="15">
               </div>
 
+              <!-- Avatar Category Tabs -->
               <div class="avatar-control-group">
-                <label>Gênero:</label>
+                <label>Tipo de Personagem:</label>
                 <div class="btn-group">
-                  <button class="avatar-gender-btn active" data-gender="female">Feminino ♀</button>
-                  <button class="avatar-gender-btn" data-gender="male">Masculino ♂</button>
+                  <button id="tab-btn-human" class="avatar-category-btn active" data-category="human">👤 Humano K-Pop</button>
+                  <button id="tab-btn-mascot" class="avatar-category-btn" data-category="mascot">🐾 Animaizinhos SKZOO</button>
                 </div>
               </div>
 
-              <div class="avatar-control-group">
-                <label>Tom de Pele:</label>
-                <div class="color-palette-row">
-                  <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#ffe0bd" style="background:#ffe0bd;"></button>
-                  <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#ffd1b3" style="background:#ffd1b3;"></button>
-                  <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#dca180" style="background:#dca180;"></button>
-                  <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#8d5524" style="background:#8d5524;"></button>
+              <!-- Animal Mascot Selector (SKZOO Animals + Arari) -->
+              <div id="group-mascot-picker" class="avatar-control-group hidden">
+                <label>Escolha seu Animalzinho:</label>
+                <div class="mascot-grid">
+                  <button class="avatar-opt-btn mascot-btn active" data-type="mascot" data-value="arari">🦜 Arari</button>
+                  <button class="avatar-opt-btn mascot-btn" data-type="mascot" data-value="bbokari">🐥 BbokAri</button>
+                  <button class="avatar-opt-btn mascot-btn" data-type="mascot" data-value="dwaekki">🐰 Dwaekki</button>
+                  <button class="avatar-opt-btn mascot-btn" data-type="mascot" data-value="wolfchan">🐺 Wolf Chan</button>
+                  <button class="avatar-opt-btn mascot-btn" data-type="mascot" data-value="leebit">🐇 Leebit</button>
+                  <button class="avatar-opt-btn mascot-btn" data-type="mascot" data-value="jiniret">🦡 Jiniret</button>
+                  <button class="avatar-opt-btn mascot-btn" data-type="mascot" data-value="hanquokka">🐿️ Han Quokka</button>
+                  <button class="avatar-opt-btn mascot-btn" data-type="mascot" data-value="puppym">🐶 PuppyM</button>
+                  <button class="avatar-opt-btn mascot-btn" data-type="mascot" data-value="foxiny">🦊 FoxI.Ny</button>
                 </div>
               </div>
 
-              <div class="avatar-control-group">
-                <label>Penteado:</label>
-                <div class="btn-grid">
-                  <button class="avatar-opt-btn" data-type="hairStyle" data-value="twin_buns">Coques K-pop</button>
-                  <button class="avatar-opt-btn" data-type="hairStyle" data-value="long_wavy">Longo Ondulado</button>
-                  <button class="avatar-opt-btn" data-type="hairStyle" data-value="curtain_kpop">Franja Cortina</button>
-                  <button class="avatar-opt-btn" data-type="hairStyle" data-value="undercut">Undercut</button>
+              <!-- Human Customizer Controls -->
+              <div id="group-human-controls">
+                <div class="avatar-control-group">
+                  <label>Gênero:</label>
+                  <div class="btn-group">
+                    <button class="avatar-gender-btn active" data-gender="female">Feminino ♀</button>
+                    <button class="avatar-gender-btn" data-gender="male">Masculino ♂</button>
+                  </div>
                 </div>
-              </div>
 
-              <div class="avatar-control-group">
-                <label>Cor do Cabelo:</label>
-                <div class="color-palette-row">
-                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#1a1a1a" style="background:#1a1a1a;"></button>
-                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#4a2c11" style="background:#4a2c11;"></button>
-                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#e6be8a" style="background:#e6be8a;"></button>
-                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#f472b6" style="background:#f472b6;"></button>
-                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#38bdf8" style="background:#38bdf8;"></button>
-                  <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#a855f7" style="background:#a855f7;"></button>
+                <div class="avatar-control-group">
+                  <label>Tom de Pele:</label>
+                  <div class="color-palette-row">
+                    <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#ffe0bd" style="background:#ffe0bd;"></button>
+                    <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#ffd1b3" style="background:#ffd1b3;"></button>
+                    <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#dca180" style="background:#dca180;"></button>
+                    <button class="avatar-opt-btn color-dot" data-type="skin" data-value="#8d5524" style="background:#8d5524;"></button>
+                  </div>
                 </div>
-              </div>
 
-              <div class="avatar-control-group">
-                <label>Figurino:</label>
-                <div class="btn-grid">
-                  <button class="avatar-opt-btn" data-type="outfit" data-value="dominate_jacket">Jaqueta dominATE</button>
-                  <button class="avatar-opt-btn" data-type="outfit" data-value="bstay_hoodie">Moletom B-Stay</button>
-                  <button class="avatar-opt-btn" data-type="outfit" data-value="tour_tee">Camiseta SKZ</button>
+                <div class="avatar-control-group">
+                  <label>Penteado:</label>
+                  <div class="btn-grid">
+                    <button class="avatar-opt-btn" data-type="hairStyle" data-value="twin_buns">Coques K-pop</button>
+                    <button class="avatar-opt-btn" data-type="hairStyle" data-value="long_wavy">Longo Ondulado</button>
+                    <button class="avatar-opt-btn" data-type="hairStyle" data-value="curtain_kpop">Franja Cortina</button>
+                    <button class="avatar-opt-btn" data-type="hairStyle" data-value="undercut">Undercut</button>
+                  </div>
                 </div>
-              </div>
 
-              <div class="avatar-control-group">
-                <label>Acessório:</label>
-                <div class="btn-grid">
-                  <button class="avatar-opt-btn" data-type="accessory" data-value="nachimbong">Nachimbong (Lightstick)</button>
-                  <button class="avatar-opt-btn" data-type="accessory" data-value="cat_ears">Orelhas SKZOO</button>
-                  <button class="avatar-opt-btn" data-type="accessory" data-value="headphones">Fones DJ</button>
-                  <button class="avatar-opt-btn" data-type="accessory" data-value="none">Nenhum</button>
+                <div class="avatar-control-group">
+                  <label>Cor do Cabelo:</label>
+                  <div class="color-palette-row">
+                    <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#1a1a1a" style="background:#1a1a1a;"></button>
+                    <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#4a2c11" style="background:#4a2c11;"></button>
+                    <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#e6be8a" style="background:#e6be8a;"></button>
+                    <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#f472b6" style="background:#f472b6;"></button>
+                    <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#38bdf8" style="background:#38bdf8;"></button>
+                    <button class="avatar-opt-btn color-dot" data-type="hairColor" data-value="#a855f7" style="background:#a855f7;"></button>
+                  </div>
+                </div>
+
+                <div class="avatar-control-group">
+                  <label>Figurino:</label>
+                  <div class="btn-grid">
+                    <button class="avatar-opt-btn" data-type="outfit" data-value="dominate_jacket">Jaqueta dominATE</button>
+                    <button class="avatar-opt-btn" data-type="outfit" data-value="bstay_hoodie">Moletom B-Stay</button>
+                    <button class="avatar-opt-btn" data-type="outfit" data-value="tour_tee">Camiseta SKZ</button>
+                  </div>
+                </div>
+
+                <div class="avatar-control-group">
+                  <label>Acessório:</label>
+                  <div class="btn-grid">
+                    <button class="avatar-opt-btn" data-type="accessory" data-value="nachimbong">Nachimbong (Lightstick)</button>
+                    <button class="avatar-opt-btn" data-type="accessory" data-value="cat_ears">Orelhas SKZOO</button>
+                    <button class="avatar-opt-btn" data-type="accessory" data-value="headphones">Fones DJ</button>
+                    <button class="avatar-opt-btn" data-type="accessory" data-value="none">Nenhum</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -333,6 +362,39 @@
           <button id="btn-save-avatar-enter" class="btn-primary" style="margin-top:16px;width:100%;">
             Pronto! Entrar no Lounge VIP 🚀
           </button>
+        </div>
+      </div>
+
+      <!-- DJ Booth Modal (Fila de Músicas do YouTube) -->
+      <div id="dj-booth-modal" class="modal-overlay hidden">
+        <div class="modal-card dj-card" style="max-width:540px;">
+          <h2 style="color:#ffd700;">🎧 Mesa do DJ Stay • Fila de Músicas</h2>
+          <div class="dj-status-box" style="background:#13062b;border:1px solid #ffd70044;border-radius:8px;padding:12px;margin:12px 0;text-align:left;">
+            <span style="font-size:9px;color:#ffd700;font-family:'DePixelBold',monospace;">TOCANDO AGORA:</span>
+            <div id="dj-current-title" style="font-size:12px;color:#fff;font-family:'DePixelBold',monospace;margin:4px 0;">Stray Kids - Chk Chk Boom</div>
+            <div id="dj-current-owner" style="font-size:10px;color:#38bdf8;">DJ da vez: Arari Mascote 🦜</div>
+          </div>
+
+          <div style="text-align:left;margin-bottom:14px;">
+            <label style="font-size:10px;color:#e2e8f0;display:block;margin-bottom:4px;">Pedir Música para a Fila (Link ou Nome do YouTube):</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="dj-song-input" placeholder="Ex: MANIAC, God's Menu, LALALALA..." style="flex:1;background:#090217;border:1px solid #a855f7;color:#fff;padding:8px;border-radius:6px;font-size:11px;">
+              <button id="btn-dj-add-song" class="btn-primary" style="white-space:nowrap;">Pedir Música 🎵</button>
+            </div>
+          </div>
+
+          <div style="text-align:left;background:#0d0320;border:1px solid #a855f733;border-radius:8px;padding:10px;max-height:160px;overflow-y:auto;">
+            <div style="font-size:10px;color:#ffd700;font-family:'DePixelBold',monospace;margin-bottom:6px;">Próximas Músicas na Fila:</div>
+            <div id="dj-queue-items" style="display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:10px;color:#94a3b8;padding:4px;background:#180a36;border-radius:4px;">1. Stray Kids - MANIAC (pedido por B-Stay Oficial)</div>
+              <div style="font-size:10px;color:#94a3b8;padding:4px;background:#180a36;border-radius:4px;">2. Stray Kids - God's Menu (pedido por Felix Fan)</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:14px;">
+            <button id="btn-dj-skip" class="hud-btn" style="flex:1;">⏭ Próxima Música</button>
+            <button id="btn-close-dj" class="btn-primary" style="flex:1;">Fechar Mesa</button>
+          </div>
         </div>
       </div>
     </section>
@@ -346,8 +408,8 @@
   <!-- Scripts -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="chat.js?v=8.4"></script>
-  <script src="game.js?v=8.4"></script>
+  <script src="chat.js?v=8.5"></script>
+  <script src="game.js?v=8.5"></script>
 
   <!-- View Router Script -->
   <script>

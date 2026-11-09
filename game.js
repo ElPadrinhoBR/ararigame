@@ -449,7 +449,7 @@ class ArariGame {
     const promises = [];
 
     // Arari Spritesheet
-    promises.push(this.loadImage('assets/arari/arari_spritesheet.png?v=8.4').then(img => {
+    promises.push(this.loadImage('assets/arari/arari_spritesheet.png?v=8.5').then(img => {
       this.assets.arariSheet = img;
     }));
 
@@ -1406,11 +1406,13 @@ class ArariGame {
       } else if (moving) {
         // Walking in all 8 directions:
         switch (facing) {
-          case 0: // Down: Row 2 (Walk Down with alternating stepping paws)
+          case 0: // Down: Row 2 (3/4 walk cycle with active stepping paws)
+          case 4: // Down-Right: Row 2 (3/4 walk cycle)
+          case 5: // Down-Left: Row 2 (3/4 walk cycle, flipped)
             row = 2;
-            col = animFrame % 4;
+            col = animFrame % 5;
             break;
-          case 1: // Up: Row 3 (Walk Up with back stepping paws)
+          case 1: // Up: Row 3 (Back walk cycle with stepping paws)
           case 6: // Up-Right (Row 3)
           case 7: // Up-Left (Row 3, flipped)
             row = 3;
@@ -1418,8 +1420,6 @@ class ArariGame {
             break;
           case 2: // Right: Row 1 (Side walk 5 frames)
           case 3: // Left: Row 1 (Side walk 5 frames, flipped)
-          case 4: // Down-Right: Row 1 (3/4 walk 5 frames)
-          case 5: // Down-Left: Row 1 (3/4 walk 5 frames, flipped)
           default:
             row = 1;
             col = animFrame % 5;

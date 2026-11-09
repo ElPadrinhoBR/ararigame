@@ -1,60 +1,43 @@
 /**
- * ChatPoint B-Stay (Visual Chatroom inspired by Humor Tadela)
- * Stray Kids dominATE Fan Club Chat & Avatar Creator
- * Version 3.0 - Unified Concert Stage Visuals, SKZ Members as Active Bots, Instant Avatar Customizer & Profanity Filter
+ * Stayzoo Arari: ChatPoint VIP Lounge
+ * Version 4.0 - Humor Tadela Visual Chat with Animal Mascots, DJ Booth, Unique Nicknames & Mobile View
  */
 
-// ─── Profanity & NSFW Filter (Portuguese & English + Leet Speak) ────────
-const BANNED_PATTERNS = [
-  // Português: Palavrões & Conteúdo Sexual
-  'puta', 'puto', 'putaria', 'vagabund', 'vadia', 'piranha', 'prostitut',
-  'caralho', 'carai', 'krl', 'krai', 'porra', 'prr', 'merda', 'bosta',
-  'cacete', 'foder', 'foda', 'fudeu', 'fodeu', 'fudid', 'fodid',
-  'buceta', 'bct', 'piroca', 'pica', 'pauzao', 'rola', 'chupada', 'chupar',
-  'boquete', 'siririca', 'safad', 'tarad', 'arrombado', 'arrombada',
-  'viado', 'viadagem', 'corno', 'corna', 'bicha',
-  'sexo', 'transar', 'transa', 'trepar', 'nude', 'nudes', 'nudez', 'pelad',
-  'porno', 'porn', 'hentai', 'xvideos', 'onlyfans', 'penis', 'vagina', 'orgasmo',
-  // English: Profanities & NSFW
-  'fuck', 'fucking', 'fucked', 'shit', 'bitch', 'asshole', 'cunt', 'dick',
-  'pussy', 'slut', 'whore', 'cock', 'blowjob', 'dildo', 'masturbat',
-  'boobs', 'tits', 'naked', 'horny'
+// ─── Profanity & NSFW Filter ──────────────────────────────────────────
+const BLOCKED_WORDS = [
+  'caralho', 'porra', 'puta', 'puto', 'foder', 'fodeu', 'fodase', 'foda-se',
+  'buceta', 'carai', 'cacete', 'piroca', 'pica', 'rola', 'cu', 'cuzão',
+  'viado', 'viadinho', 'arrombado', 'merda', 'bosta', 'vagabunda', 'vadia',
+  'fuck', 'shit', 'bitch', 'asshole', 'dick', 'pussy', 'nigger', 'cunt',
+  'sexo', 'sex', 'nude', 'nudes', 'porn', 'porno', 'safada', 'safado'
 ];
 
 function sanitizeMessage(text) {
   if (!text) return { clean: '', blocked: false };
-
-  // Normalize leet-speak (e.g., p.u.t.a -> puta, s3x0 -> sexo, c@ralho -> caralho)
-  const normalized = text.toLowerCase()
-    .replace(/[0o]/g, 'o')
-    .replace(/[1il!]/g, 'i')
-    .replace(/[3e]/g, 'e')
-    .replace(/[4a@]/g, 'a')
-    .replace(/[5s$]/g, 's')
-    .replace(/[7t]/g, 't')
-    .replace(/[^a-z0-9]/g, '');
-
-  for (const word of BANNED_PATTERNS) {
-    if (normalized.includes(word)) {
-      return {
-        clean: 'Mensagem filtrada pelo sistema B-Stay Safe Space 🦜💜 (Mantenha o chat amigável!)',
-        blocked: true
-      };
+  let clean = text;
+  let blocked = false;
+  const lower = text.toLowerCase();
+  for (const word of BLOCKED_WORDS) {
+    const regex = new RegExp('\\b' + word + '\\b', 'gi');
+    if (regex.test(lower)) {
+      blocked = true;
+      clean = clean.replace(regex, '***');
     }
   }
-
-  return { clean: text.trim().substring(0, 80), blocked: false };
+  return { clean, blocked };
 }
 
-// ─── Default Avatar Settings ────────────────────────────────────────────
+// ─── Default Avatar Settings ──────────────────────────────────────────
 const DEFAULT_AVATAR = {
+  name: 'B-Stay Brasil',
+  category: 'human', // 'human' or 'mascot'
+  mascot: 'arari',   // 'arari', 'bbokari', 'dwaekki', 'wolfchan', 'leebit', 'jiniret', 'hanquokka', 'puppym', 'foxiny'
   gender: 'female',
   skin: '#ffd1b3',
   hairStyle: 'twin_buns',
-  hairColor: '#3a2010',
+  hairColor: '#4a2c11',
   outfit: 'dominate_jacket',
-  accessory: 'nachimbong',
-  name: 'B-Stay Brasil'
+  accessory: 'nachimbong'
 };
 
 // ─── Procedural Pixel-Art Avatar Renderer (Humor Tadela Style) ──────────
@@ -63,21 +46,158 @@ class AvatarRenderer {
     ctx.save();
     ctx.translate(Math.floor(x), Math.floor(y));
 
+    const bob = isWalking ? Math.sin(animFrame * 1.5) * 2 : 0;
+    const legOffset = isWalking ? Math.sin(animFrame * 1.5) * 3 : 0;
+
+    // 1. Ground Shadow (under feet)
+    ctx.fillStyle = 'rgba(0,0,0,0.38)';
+    ctx.beginPath();
+    ctx.ellipse(0, 22, 14, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // If animal mascot is selected, draw cute SKZ mascot!
+    if (config.category === 'mascot') {
+      this.drawMascotAvatar(ctx, config.mascot || 'arari', bob, legOffset);
+      ctx.restore();
+      return;
+    }
+
+    // Otherwise, draw Humano K-Pop (Humor Tadela Style)
+    this.drawHumanAvatar(ctx, config, bob, legOffset);
+    ctx.restore();
+  }
+
+  static drawMascotAvatar(ctx, mascot, bob, legOffset) {
+    const m = mascot.toLowerCase();
+    
+    // Paws / Feet
+    let footColor = '#f97316';
+    if (m === 'wolfchan') footColor = '#334155';
+    else if (m === 'leebit' || m === 'jiniret') footColor = '#e2e8f0';
+    else if (m === 'dwaekki') footColor = '#f472b6';
+    else if (m === 'hanquokka') footColor = '#78350f';
+    else if (m === 'puppym') footColor = '#78350f';
+    else if (m === 'foxiny') footColor = '#ea580c';
+
+    ctx.fillStyle = footColor;
+    ctx.fillRect(-8, 16 + bob - legOffset, 6, 5);
+    ctx.fillRect(2, 16 + bob + legOffset, 6, 5);
+
+    // Body
+    let bodyColor = '#0284c7';
+    if (m === 'bbokari') bodyColor = '#facc15';
+    else if (m === 'dwaekki') bodyColor = '#f472b6';
+    else if (m === 'wolfchan') bodyColor = '#64748b';
+    else if (m === 'leebit') bodyColor = '#f8fafc';
+    else if (m === 'jiniret') bodyColor = '#ffffff';
+    else if (m === 'hanquokka') bodyColor = '#a16207';
+    else if (m === 'puppym') bodyColor = '#fef08a';
+    else if (m === 'foxiny') bodyColor = '#fb923c';
+
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.ellipse(0, 4 + bob, 14, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Belly patch
+    if (m === 'arari') {
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.arc(0, 5 + bob, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(-2, 3 + bob, 4, 4);
+    } else if (m === 'wolfchan' || m === 'bbokari' || m === 'foxiny' || m === 'hanquokka') {
+      ctx.fillStyle = (m === 'wolfchan') ? '#cbd5e1' : '#ffffff';
+      ctx.beginPath();
+      ctx.ellipse(0, 6 + bob, 8, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Head
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.arc(0, -12 + bob, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Ears / Crest
+    if (m === 'arari') {
+      // Cyan crest
+      ctx.fillStyle = '#06b6d4';
+      ctx.beginPath();
+      ctx.moveTo(-4, -26 + bob);
+      ctx.lineTo(0, -32 + bob);
+      ctx.lineTo(4, -26 + bob);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else if (m === 'leebit' || m === 'dwaekki') {
+      // Bunny / Dwaekki ears
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-10, -32 + bob, 6, 16);
+      ctx.fillRect(4, -32 + bob, 6, 16);
+      ctx.strokeRect(-10, -32 + bob, 6, 16);
+      ctx.strokeRect(4, -32 + bob, 6, 16);
+      ctx.fillStyle = '#fbcfe8';
+      ctx.fillRect(-8, -30 + bob, 3, 12);
+      ctx.fillRect(6, -30 + bob, 3, 12);
+    } else if (m === 'wolfchan' || m === 'foxiny') {
+      // Pointed ears
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.moveTo(-14, -18 + bob); ctx.lineTo(-10, -30 + bob); ctx.lineTo(-4, -22 + bob); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(14, -18 + bob); ctx.lineTo(10, -30 + bob); ctx.lineTo(4, -22 + bob); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+    } else if (m === 'puppym') {
+      // Floppy ears
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(-16, -16 + bob, 5, 14);
+      ctx.fillRect(11, -16 + bob, 5, 14);
+    } else if (m === 'hanquokka' || m === 'jiniret') {
+      // Round ears
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath(); ctx.arc(-12, -22 + bob, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(12, -22 + bob, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+
+    // Cheeks
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
+    ctx.beginPath(); ctx.arc(-7, -9 + bob, 3, 0, Math.PI * 2); ctx.arc(7, -9 + bob, 3, 0, Math.PI * 2); ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.ellipse(-5, -13 + bob, 3.5, 4.5, 0, 0, Math.PI * 2); ctx.ellipse(5, -13 + bob, 3.5, 4.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath(); ctx.arc(-5, -13 + bob, 2.2, 0, Math.PI * 2); ctx.arc(5, -13 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+
+    // Snout / Beak
+    if (m === 'arari' || m === 'bbokari') {
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath(); ctx.moveTo(-3, -11 + bob); ctx.lineTo(0, -6 + bob); ctx.lineTo(3, -11 + bob); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (m === 'dwaekki') {
+      ctx.fillStyle = '#db2777';
+      ctx.fillRect(-4, -10 + bob, 8, 5);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-2, -9 + bob, 1.5, 2); ctx.fillRect(0.5, -9 + bob, 1.5, 2);
+    } else {
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath(); ctx.arc(0, -9 + bob, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  static drawHumanAvatar(ctx, config, bob, legOffset) {
     const skin = config.skin || '#ffd1b3';
     const hair = config.hairColor || '#4a2c11';
     const gender = config.gender || 'female';
     const style = config.hairStyle || (gender === 'female' ? 'twin_buns' : 'curtain_kpop');
     const outfit = config.outfit || 'dominate_jacket';
     const accessory = config.accessory || 'nachimbong';
-
-    const bob = isWalking ? Math.sin(animFrame * 1.5) * 2 : 0;
-    const legOffset = isWalking ? Math.sin(animFrame * 1.5) * 3 : 0;
-
-    // 1. Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.beginPath();
-    ctx.ellipse(0, 22, 14, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
 
     // 2. Legs & Shoes
     ctx.fillStyle = '#0f172a';
@@ -93,7 +213,7 @@ class AvatarRenderer {
                     outfit === 'tour_tee' ? '#dc2626' : '#9333ea';
     ctx.fillRect(-9, -2 + bob, 18, 14);
 
-    // Jacket golden zipper & SKZ red logo patch
+    // Jacket golden zipper
     ctx.fillStyle = '#ffd700';
     ctx.fillRect(-1, -2 + bob, 2, 14);
     if (outfit === 'dominate_jacket') {
@@ -109,25 +229,16 @@ class AvatarRenderer {
     ctx.fillRect(-12, 9 + bob, 3, 3);
     ctx.fillRect(9, 9 + bob, 3, 3);
 
-    // 5. Nachimbong Lightstick
+    // 5. Lightstick (Nachimbong)
     if (accessory === 'nachimbong') {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(12, 2 + bob, 2, 12);
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(13, 0 + bob, 6, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(13, 0 + bob, 6, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#ef4444';
-      ctx.beginPath();
-      ctx.arc(13, 0 + bob, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-      ctx.beginPath();
-      ctx.arc(13, 0 + bob, 9, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(13, 0 + bob, 2.5, 0, Math.PI * 2); ctx.fill();
     }
 
-    // 6. Head (Humor Tadela expressive proportions)
+    // 6. Head
     ctx.fillStyle = skin;
     ctx.beginPath();
     ctx.arc(0, -14 + bob, 14, 0, Math.PI * 2);
@@ -157,180 +268,57 @@ class AvatarRenderer {
     ctx.ellipse(5, -14.5 + bob, 2, 3, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-6, -17 + bob, 2, 2);
-    ctx.fillRect(4, -17 + bob, 2, 2);
-
     // Mouth
     ctx.strokeStyle = '#881337';
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(0, -9 + bob, 3.5, 0.1 * Math.PI, 0.9 * Math.PI);
+    ctx.arc(0, -8 + bob, 4, 0.2 * Math.PI, 0.8 * Math.PI);
     ctx.stroke();
 
-    // 7. Hair
+    // Hair
     ctx.fillStyle = hair;
-    ctx.strokeStyle = '#18181b';
+    ctx.strokeStyle = '#09090b';
     ctx.lineWidth = 1;
 
     if (style === 'twin_buns') {
-      ctx.beginPath();
-      ctx.arc(0, -18 + bob, 15, Math.PI, 0);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(-14, -24 + bob, 6, 0, Math.PI * 2);
-      ctx.arc(14, -24 + bob, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillRect(-10, -22 + bob, 20, 6);
+      ctx.beginPath(); ctx.arc(-14, -24 + bob, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(14, -24 + bob, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, -20 + bob, 15, Math.PI, Math.PI * 2); ctx.fill(); ctx.stroke();
     } else if (style === 'long_wavy') {
-      ctx.beginPath();
-      ctx.arc(0, -18 + bob, 15, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(-14, -16 + bob, 5, 24);
-      ctx.fillRect(9, -16 + bob, 5, 24);
-      ctx.fillRect(-9, -22 + bob, 18, 5);
+      ctx.beginPath(); ctx.arc(0, -20 + bob, 15, Math.PI, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillRect(-15, -16 + bob, 4, 18); ctx.fillRect(11, -16 + bob, 4, 18);
     } else if (style === 'curtain_kpop') {
-      ctx.beginPath();
-      ctx.arc(0, -18 + bob, 15, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(-13, -18 + bob, 5, 12);
-      ctx.fillRect(8, -18 + bob, 5, 12);
-      ctx.fillRect(-11, -22 + bob, 8, 7);
-      ctx.fillRect(3, -22 + bob, 8, 7);
+      ctx.beginPath(); ctx.arc(0, -20 + bob, 15, Math.PI, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillRect(-13, -16 + bob, 4, 8); ctx.fillRect(9, -16 + bob, 4, 8);
     } else {
-      ctx.beginPath();
-      ctx.arc(0, -19 + bob, 14, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(-10, -22 + bob, 20, 5);
+      ctx.beginPath(); ctx.arc(0, -21 + bob, 14, Math.PI, Math.PI * 2); ctx.fill(); ctx.stroke();
     }
-
-    // 8. Accessories
-    if (accessory === 'cat_ears') {
-      ctx.fillStyle = '#fb923c';
-      ctx.beginPath();
-      ctx.moveTo(-12, -26 + bob); ctx.lineTo(-6, -34 + bob); ctx.lineTo(-2, -26 + bob); ctx.fill();
-      ctx.moveTo(2, -26 + bob); ctx.lineTo(6, -34 + bob); ctx.lineTo(12, -26 + bob); ctx.fill();
-    } else if (accessory === 'headphones') {
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(0, -14 + bob, 15, 1.1 * Math.PI, 1.9 * Math.PI);
-      ctx.stroke();
-      ctx.fillStyle = '#ffd700';
-      ctx.fillRect(-16, -18 + bob, 4, 8);
-      ctx.fillRect(12, -18 + bob, 4, 8);
-    }
-
-    ctx.restore();
   }
 }
 
 // ─── Arari Official Bot Frases STAY ─────────────────────────────────────
 const ARARI_STAY_PHRASES = [
-  "Stray Kids everywhere all around the world! ⚡",
-  "Você sabia? O Bang Chan disse que o Brasil tem a energia mais alta do planeta! 🇧🇷",
-  "O Felix falando 'G'day mate' com aquele sorrisinho derrete qualquer STAY! ✨",
-  "Lee Know nos encarando no palco com aquele olhar de Leebit haha 🐰",
-  "Quem mais não supera a coreografia do Hyunjin?! Que arte pura!",
-  "Dwaekki no palco é pura potência! Changbin sempre amassando no rap! 💪",
-  "HAN Quokka: melhor all-rounder do K-pop, rima rápido e canta agudo demais! 🐿️",
-  "Seungmin cantando ao vivo parece gravação de estúdio de tão impecável! 🐶🎤",
-  "Nosso Maknae I.N brilhou muito no show! Nosso pãozinho favorito! 🍞🦊",
-  "B-Stay unida jamais será vencida! Nosso amor atravessa oceanos! 🦜💜",
-  "Vocês já levantaram a Nachimbong hoje? 🔦✨",
-  "HIHI! Amendoim e carinho de Stay é a melhor combinação do mundo! 🥜❤️",
-  "O Trio Caótico: Arari + BbokAri + Dwaekki dominando tudo! 💥",
-  "STAY: Não importa a distância, o Stray Kids sempre encontra a gente na música!",
-  "Vamos cantar todos juntos: 'Stray Kids dominATE!' 🎶",
-  "A Araruja veio direto do Brasil pra voar junto com vocês! 🇧🇷🪽",
-  "Nunca se esqueçam: 'You make Stray Kids stay!' ♥"
+  "STAY! Vocês são a luz que guia o Stray Kids em cada batida! 💜",
+  "A dominATE Tour no Brasil vai ser ÉPICA! Quem tá pronto pra gritar até perder a voz? 🇧🇷",
+  "O Trio Caótico: Arari + BbokAri + Dwaekki dominando tudo! 🦜🐥🐰",
+  "Vocês sabiam que a cada Chk Chk Boom o meu coração bate mais forte? ✨",
+  "Felix mandou um abraço especial para todas as B-Stays! 🍪",
+  "Bang Chan disse que o Brasil é a casa do Stray Kids! 🐺💙",
+  "Comam muito bem, bebam água e nunca deixem de sonhar, STAYs! 🌸",
+  "STAY tuned! A nossa família global nunca para de crescer! 🌍💫",
+  "B-Stay é a torcida mais apaixonada do mundo inteiro! 🎉"
 ];
 
-// ─── Stray Kids Member Bots in Chat ─────────────────────────────────────
+// ─── 8 Stray Kids Member Bots ───────────────────────────────────────────
 const SKZ_MEMBER_BOTS = [
-  {
-    name: 'Bang Chan 🐺', id: 2, skzoo: 'Wolf Chan', color: '#ef4444',
-    x: 180, y: 270, targetX: 180, targetY: 270, isWalking: false, animFrame: 0,
-    phrases: [
-      "G'day B-STAY! Como vocês estão hoje? 🇧🇷",
-      "Obrigado pelo amor do Brasil! Vocês são incríveis! ♥",
-      "Stay com a gente sempre! Wolf Chan manda um abraço! 🐺",
-      "Stray Kids everywhere all around the world! ⚡"
-    ],
-    timer: 10 + Math.random() * 12, bubble: null
-  },
-  {
-    name: 'Felix 🐥', id: 3, skzoo: 'BbokAri', color: '#fb923c',
-    x: 320, y: 310, targetX: 320, targetY: 310, isWalking: false, animFrame: 0,
-    phrases: [
-      "Oi B-Stay! Arari é fofa demais! 🦜✨",
-      "Trio Caótico na área: Arari + BbokAri + Dwaekki! 💥",
-      "Saranghaeyo, Brasil! Vocês têm meu coração! 🧡",
-      "Muito obrigado pela energia nos shows!"
-    ],
-    timer: 16 + Math.random() * 14, bubble: null
-  },
-  {
-    name: 'Lee Know 🐰', id: 0, skzoo: 'Leebit', color: '#a855f7',
-    x: 460, y: 260, targetX: 460, targetY: 260, isWalking: false, animFrame: 0,
-    phrases: [
-      "Olá STAYs! Já dançaram hoje? 🐰💃",
-      "O ritmo do Brasil é contagiante demais!",
-      "Leebit mandando lembranças pras B-STAYs!"
-    ],
-    timer: 22 + Math.random() * 16, bubble: null
-  },
-  {
-    name: 'HAN 🐿️', id: 1, skzoo: 'Han Quokka', color: '#f59e0b',
-    x: 600, y: 290, targetX: 600, targetY: 290, isWalking: false, animFrame: 0,
-    phrases: [
-      "E aí, STAYs! Quokka na área compondo novas rimas! 🐿️",
-      "A paixão dos fãs do Brasil arrepia até a alma!",
-      "B-Stay é pura energia!"
-    ],
-    timer: 28 + Math.random() * 16, bubble: null
-  },
-  {
-    name: 'Hyunjin 🥟', id: 7, skzoo: 'Jiniret', color: '#818cf8',
-    x: 230, y: 340, targetX: 230, targetY: 340, isWalking: false, animFrame: 0,
-    phrases: [
-      "Oi STAYs! Que visual lindo desse palco! ✨🎨",
-      "A arte e os desenhos das B-STAYs são puro talento!",
-      "Um beijo carinhoso pra todo mundo no chat!"
-    ],
-    timer: 34 + Math.random() * 16, bubble: null
-  },
-  {
-    name: 'Changbin 🐷🐰', id: 6, skzoo: 'Dwaekki', color: '#f43f5e',
-    x: 520, y: 340, targetX: 520, targetY: 340, isWalking: false, animFrame: 0,
-    phrases: [
-      "YOH! Dwaekki treinando firme no palco! 💪",
-      "A força dos gritos dos B-STAYs faz tudo tremer!",
-      "Trio Caótico com a Arari é imbatível! 🔥"
-    ],
-    timer: 40 + Math.random() * 16, bubble: null
-  },
-  {
-    name: 'Seungmin 🐶', id: 4, skzoo: 'PuppyM', color: '#22c55e',
-    x: 680, y: 260, targetX: 680, targetY: 260, isWalking: false, animFrame: 0,
-    phrases: [
-      "Olá STAYs! Sempre cantando com todo o coração! 🐶🎤",
-      "As vozes do Brasil afinadíssimas cantando nossas músicas!",
-      "PuppyM manda um abraço bem forte!"
-    ],
-    timer: 46 + Math.random() * 16, bubble: null
-  },
-  {
-    name: 'I.N 🦊', id: 5, skzoo: 'FoxI.Ny', color: '#38bdf8',
-    x: 390, y: 360, targetX: 390, targetY: 360, isWalking: false, animFrame: 0,
-    phrases: [
-      "Oi gente! Nosso Maknae pãozinho tá aqui! 🍞🦊",
-      "Obrigado pelo carinho sem fim, B-STAY!",
-      "Vocês nos fazem os artistas mais felizes do mundo!"
-    ],
-    timer: 52 + Math.random() * 16, bubble: null
-  }
+  { id: 0, name: 'Lee Know', color: '#a855f7', x: 180, y: 150, targetX: 180, targetY: 150, isWalking: false, animFrame: 0, phrases: ["Olá B-Stay! Arari é fofa demais! 🐰", "Já comeram pudim hoje? Não esqueçam das refeições!"], timer: 14, bubble: null },
+  { id: 1, name: 'HAN', color: '#38bdf8', x: 280, y: 180, targetX: 280, targetY: 180, isWalking: false, animFrame: 0, phrases: ["Trio Caótico com a Arari é imbatível! 🐿️", "Escrevendo novas músicas pensando nos STAYs!"], timer: 18, bubble: null },
+  { id: 2, name: 'Bang Chan', color: '#ef4444', x: 400, y: 140, targetX: 400, targetY: 140, isWalking: false, animFrame: 0, phrases: ["STAY, vocês são a nossa maior força! 🐺", "Brasil, mal posso esperar pelo show! 🇧🇷"], timer: 22, bubble: null },
+  { id: 3, name: 'Felix', color: '#ffd700', x: 520, y: 170, targetX: 520, targetY: 170, isWalking: false, animFrame: 0, phrases: ["BbokAri & Arari: As mascotes mais brilhantes! 🐥", "Bake some cookies for B-STAY! 🍪"], timer: 16, bubble: null },
+  { id: 4, name: 'Seungmin', color: '#10b981', x: 620, y: 150, targetX: 620, targetY: 150, isWalking: false, animFrame: 0, phrases: ["Cantando com o coração para cada um de vocês! 🐶", "O palco está perfeito hoje!"], timer: 24, bubble: null },
+  { id: 5, name: 'Hyunjin', color: '#ec4899', x: 220, y: 250, targetX: 220, targetY: 250, isWalking: false, animFrame: 0, phrases: ["Dançando com toda a minha paixão por vocês! 🦡", "A energia do Brasil é sem igual!"], timer: 20, bubble: null },
+  { id: 6, name: 'Changbin', color: '#f97316', x: 480, y: 260, targetX: 480, targetY: 260, isWalking: false, animFrame: 0, phrases: ["Dwaekki aprova esse Lounge VIP! 🐰💪", "YOH! Vamos quebrar tudo no dominATE!"], timer: 26, bubble: null },
+  { id: 7, name: 'I.N', color: '#06b6d4', x: 590, y: 240, targetX: 590, targetY: 240, isWalking: false, animFrame: 0, phrases: ["Nosso Maknae on Top ama vocês! 🦊", "Vocês nos fazem os artistas mais felizes do mundo!"], timer: 28, bubble: null }
 ];
 
 // ─── ChatPoint Room Controller ──────────────────────────────────────────
@@ -339,8 +327,15 @@ class ChatPointRoom {
     this.canvas = document.getElementById('chatCanvas');
     this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
 
+    // Persistent Unique Client ID (prevents character duplication on reload!)
+    this.myClientId = sessionStorage.getItem('stayzoo_chat_client_id');
+    if (!this.myClientId) {
+      this.myClientId = 'stay_' + Math.random().toString(16).substr(2, 8);
+      sessionStorage.setItem('stayzoo_chat_client_id', this.myClientId);
+    }
+
     this.arariSheet = new Image();
-    this.arariSheet.src = 'assets/arari/arari_spritesheet.png?v=8.4';
+    this.arariSheet.src = 'assets/arari/arari_spritesheet.png?v=8.5';
 
     this.stageTile = new Image();
     this.stageTile.src = 'assets/tiles/tile_stage_skz.png';
@@ -372,26 +367,44 @@ class ChatPointRoom {
     this.userAvatar = { ...DEFAULT_AVATAR };
     this.loadUserAvatar();
 
-    this.myPosition = { x: 380, y: 320, targetX: 380, targetY: 320, isWalking: false, animFrame: 0, bubble: null };
+    this.myPosition = { x: 380, y: 280, targetX: 380, targetY: 280, isWalking: false, animFrame: 0, bubble: null };
 
     // Arari Mascot Bot
     this.arariBot = {
       name: 'Arari 🦜',
-      x: 380, y: 240, targetX: 380, targetY: 240,
+      x: 380, y: 210, targetX: 380, targetY: 210,
       isWalking: false, animFrame: 0,
-      bubble: { text: "Olá B-Stay! Bem-vinda ao palco VIP com o Stray Kids! 🦜💜", timer: 9.0 },
+      bubble: { text: "Olá B-Stay! Bem-vinda ao Lounge VIP oficial! 🦜💜", timer: 9.0 },
       phraseTimer: 12.0
     };
 
     // SKZ Member Bots
     this.skzBots = SKZ_MEMBER_BOTS.map(b => ({ ...b, phrases: [...b.phrases] }));
 
-    // Remote real users connected via MQTT
-    this.remoteUsers = [];
+    // Remote users stored in a Map keyed by unique clientId (NO DUPLICATES!)
+    this.remoteUsers = new Map();
 
+    // DJ Booth System & YouTube Queue
+    this.djBooth = { x: 690, y: 120, w: 90, h: 50 };
+    this.djState = {
+      currentTrack: {
+        id: 'gGzpAi8-8mU',
+        title: 'Stray Kids - Chk Chk Boom',
+        dj: 'DJ Arari 🦜'
+      },
+      queue: [
+        { id: 'EaswWdtB7n8', title: 'Stray Kids - MANIAC', requestedBy: 'B-Stay Oficial' },
+        { id: 'TQTlCHxyuu8', title: "Stray Kids - God's Menu", requestedBy: 'Felix Stan' },
+        { id: 'OvioeS1ZZ7o', title: 'Stray Kids - LALALALA', requestedBy: 'Changbin Fan' }
+      ]
+    };
+
+    this.heartbeatTimer = 0;
     this.mqttClient = null;
+
     this.setupMQTT();
     this.setupUI();
+    this.setupDjEvents();
     this.resize();
     window.addEventListener('resize', () => this.resize());
 
@@ -402,7 +415,9 @@ class ChatPointRoom {
   loadUserAvatar() {
     try {
       const saved = localStorage.getItem('stayzoo_user_avatar');
-      if (saved) this.userAvatar = JSON.parse(saved);
+      if (saved) {
+        this.userAvatar = { ...DEFAULT_AVATAR, ...JSON.parse(saved) };
+      }
     } catch (e) {}
   }
 
@@ -416,7 +431,7 @@ class ChatPointRoom {
     if (!this.canvas) return;
     const rect = this.canvas.parentElement.getBoundingClientRect();
     this.canvas.width = rect.width || 800;
-    this.canvas.height = rect.height || 480;
+    this.canvas.height = rect.height || 420;
     if (this.stageTile.complete && this.ctx && !this.stagePattern) {
       try { this.stagePattern = this.ctx.createPattern(this.stageTile, 'repeat'); } catch(e){}
     }
@@ -425,9 +440,8 @@ class ChatPointRoom {
   setupMQTT() {
     if (typeof mqtt === 'undefined') return;
     try {
-      const clientId = 'stay_' + Math.random().toString(16).substr(2, 8);
       this.mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
-        clientId,
+        clientId: this.myClientId,
         keepalive: 60,
         clean: true
       });
@@ -435,75 +449,105 @@ class ChatPointRoom {
       this.mqttClient.on('connect', () => {
         this.mqttClient.subscribe('stayzoo/arari/chatpoint/messages');
         this.mqttClient.subscribe('stayzoo/arari/chatpoint/movement');
+        this.mqttClient.subscribe('stayzoo/arari/chatpoint/presence');
+        this.mqttClient.subscribe('stayzoo/arari/chatpoint/dj_queue');
+        this.broadcastPresence();
       });
 
       this.mqttClient.on('message', (topic, payload) => {
         try {
           const data = JSON.parse(payload.toString());
-          if (data.senderId === clientId) return;
+          if (data.senderId === this.myClientId) return;
 
           if (topic.includes('messages')) {
             this.handleRemoteMessage(data);
           } else if (topic.includes('movement')) {
             this.handleRemoteMovement(data);
+          } else if (topic.includes('presence')) {
+            this.handleRemotePresence(data);
+          } else if (topic.includes('dj_queue')) {
+            this.handleRemoteDjQueue(data);
           }
         } catch (e) {}
       });
     } catch (e) {}
   }
 
-  handleRemoteMessage(data) {
-    let user = this.remoteUsers.find(u => u.id === data.senderId);
-    if (!user) {
-      user = {
+  broadcastPresence() {
+    if (!this.mqttClient || !this.mqttClient.connected) return;
+    try {
+      this.mqttClient.publish('stayzoo/arari/chatpoint/presence', JSON.stringify({
+        senderId: this.myClientId,
+        name: this.userAvatar.name,
+        avatar: this.userAvatar,
+        x: this.myPosition.x,
+        y: this.myPosition.y
+      }));
+    } catch(e) {}
+  }
+
+  handleRemotePresence(data) {
+    if (!data.senderId) return;
+    const existing = this.remoteUsers.get(data.senderId);
+    if (existing) {
+      existing.name = data.name || existing.name;
+      existing.avatar = data.avatar || existing.avatar;
+      existing.lastSeen = Date.now();
+    } else {
+      this.remoteUsers.set(data.senderId, {
         id: data.senderId,
-        name: data.name,
-        x: data.x || 300, y: data.y || 280,
-        targetX: data.x || 300, targetY: data.y || 280,
-        isWalking: false, animFrame: 0,
+        name: data.name || 'Stay',
         avatar: data.avatar || { ...DEFAULT_AVATAR },
-        bubble: null
-      };
-      this.remoteUsers.push(user);
+        x: data.x || 300, y: data.y || 260,
+        targetX: data.x || 300, targetY: data.y || 260,
+        isWalking: false, animFrame: 0,
+        bubble: null,
+        lastSeen: Date.now()
+      });
     }
-    user.bubble = { text: data.text, timer: 7.0 };
+  }
+
+  handleRemoteMessage(data) {
+    if (!data.senderId) return;
+    this.handleRemotePresence(data);
+    const user = this.remoteUsers.get(data.senderId);
+    if (user) {
+      user.bubble = { text: data.text, timer: 7.0 };
+      user.lastSeen = Date.now();
+    }
     this.addLogMessage(data.name, data.text);
   }
 
   handleRemoteMovement(data) {
-    let user = this.remoteUsers.find(u => u.id === data.senderId);
-    if (!user) {
-      user = {
-        id: data.senderId,
-        name: data.name,
-        x: data.x, y: data.y,
-        targetX: data.x, targetY: data.y,
-        isWalking: false, animFrame: 0,
-        avatar: data.avatar || { ...DEFAULT_AVATAR },
-        bubble: null
-      };
-      this.remoteUsers.push(user);
-    } else {
+    if (!data.senderId) return;
+    this.handleRemotePresence(data);
+    const user = this.remoteUsers.get(data.senderId);
+    if (user) {
       user.targetX = data.x;
       user.targetY = data.y;
+      user.lastSeen = Date.now();
     }
+  }
+
+  handleRemoteDjQueue(data) {
+    if (data.currentTrack) this.djState.currentTrack = data.currentTrack;
+    if (Array.isArray(data.queue)) this.djState.queue = data.queue;
+    this.updateDjUI();
   }
 
   sendMessage(rawText) {
     if (!rawText || !rawText.trim()) return;
 
-    // Apply Profanity & NSFW Filter
     const result = sanitizeMessage(rawText);
     const cleanText = result.clean;
 
     this.myPosition.bubble = { text: cleanText, timer: 7.0 };
     this.addLogMessage(this.userAvatar.name, cleanText);
 
-    // Broadcast to global STAYs if safe
     if (!result.blocked && this.mqttClient && this.mqttClient.connected) {
       try {
         this.mqttClient.publish('stayzoo/arari/chatpoint/messages', JSON.stringify({
-          senderId: this.mqttClient.options.clientId,
+          senderId: this.myClientId,
           name: this.userAvatar.name,
           avatar: this.userAvatar,
           x: this.myPosition.x,
@@ -513,148 +557,345 @@ class ChatPointRoom {
       } catch (e) {}
     }
 
-    // Occasional response from Arari or SKZ bot
     setTimeout(() => {
       const responder = Math.random() < 0.5 ? this.arariBot : this.skzBots[Math.floor(Math.random() * this.skzBots.length)];
       if (responder === this.arariBot) {
         const phrase = ARARI_STAY_PHRASES[Math.floor(Math.random() * ARARI_STAY_PHRASES.length)];
-        this.arariBot.bubble = { text: phrase, timer: 7.0 };
+        this.arariBot.bubble = { text: phrase, timer: 7.5 };
         this.addLogMessage('Arari 🦜', phrase);
-      } else {
+      } else if (responder) {
         const phrase = responder.phrases[Math.floor(Math.random() * responder.phrases.length)];
-        responder.bubble = { text: phrase, timer: 7.0 };
-        this.addLogMessage(responder.name, phrase);
+        responder.bubble = { text: phrase, timer: 7.5 };
+        this.addLogMessage(responder.name + ' ⭐', phrase);
       }
-    }, 1600);
+    }, 1200 + Math.random() * 2000);
   }
 
-  addLogMessage(name, text) {
+  addLogMessage(author, text) {
     const log = document.getElementById('chat-log');
     if (!log) return;
+
     const item = document.createElement('div');
     item.className = 'chat-log-item';
-    item.innerHTML = `<span class="chat-log-name">${name}:</span> <span class="chat-log-text">${text}</span>`;
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'chat-log-name';
+    nameSpan.textContent = author + ': ';
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'chat-log-text';
+    textSpan.textContent = text;
+
+    item.appendChild(nameSpan);
+    item.appendChild(textSpan);
     log.appendChild(item);
+
     log.scrollTop = log.scrollHeight;
   }
 
   setupUI() {
-    if (this.canvas) {
-      const handleCanvasClick = (clientX, clientY) => {
-        const rect = this.canvas.getBoundingClientRect();
-        const clickX = clientX - rect.left;
-        const clickY = clientY - rect.top;
-
-        // Walkable stage area inside the chatroom
-        if (clickY > 120 && clickY < this.canvas.height - 40) {
-          this.myPosition.targetX = clickX;
-          this.myPosition.targetY = clickY;
-
-          if (this.mqttClient && this.mqttClient.connected) {
-            try {
-              this.mqttClient.publish('stayzoo/arari/chatpoint/movement', JSON.stringify({
-                senderId: this.mqttClient.options.clientId,
-                name: this.userAvatar.name,
-                avatar: this.userAvatar,
-                x: clickX,
-                y: clickY
-              }));
-            } catch (e) {}
-          }
-        }
-      };
-
-      this.canvas.addEventListener('click', (e) => handleCanvasClick(e.clientX, e.clientY));
-      this.canvas.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 0) handleCanvasClick(e.touches[0].clientX, e.touches[0].clientY);
-      }, { passive: true });
-    }
-
     const form = document.getElementById('chat-input-form');
     const input = document.getElementById('chat-input-field');
     if (form && input) {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
-        this.sendMessage(input.value);
-        input.value = '';
+        const text = input.value;
+        if (text) {
+          this.sendMessage(text);
+          input.value = '';
+        }
       });
     }
 
-    this.setupAvatarCustomizer();
-  }
+    if (this.canvas) {
+      const handleStageClick = (clientX, clientY) => {
+        const rect = this.canvas.getBoundingClientRect();
+        const clickX = clientX - rect.left;
+        const clickY = clientY - rect.top;
 
-  setupAvatarCustomizer() {
-    const previewCanvas = document.getElementById('avatar-preview-canvas');
-    const updatePreview = () => {
-      if (!previewCanvas) return;
-      const ctx = previewCanvas.getContext('2d');
-      ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-      AvatarRenderer.drawAvatar(ctx, previewCanvas.width / 2, previewCanvas.height / 2 + 10, this.userAvatar, false, 0);
-    };
+        // Check if clicked on DJ Booth
+        if (
+          clickX >= this.djBooth.x - 10 && clickX <= this.djBooth.x + this.djBooth.w + 10 &&
+          clickY >= this.djBooth.y - 10 && clickY <= this.djBooth.y + this.djBooth.h + 10
+        ) {
+          this.openDjModal();
+          return;
+        }
 
-    updatePreview();
+        // Safe-zone movement limits
+        const safeMinX = 40;
+        const safeMaxX = Math.max(100, this.canvas.width - 40);
+        const safeMinY = 70;
+        const safeMaxY = Math.max(120, this.canvas.height - 40);
 
+        this.myPosition.targetX = Math.max(safeMinX, Math.min(safeMaxX, clickX));
+        this.myPosition.targetY = Math.max(safeMinY, Math.min(safeMaxY, clickY));
+
+        if (this.mqttClient && this.mqttClient.connected) {
+          try {
+            this.mqttClient.publish('stayzoo/arari/chatpoint/movement', JSON.stringify({
+              senderId: this.myClientId,
+              name: this.userAvatar.name,
+              avatar: this.userAvatar,
+              x: this.myPosition.targetX,
+              y: this.myPosition.targetY
+            }));
+          } catch(e) {}
+        }
+      };
+
+      this.canvas.addEventListener('click', (e) => handleStageClick(e.clientX, e.clientY));
+      this.canvas.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches[0]) {
+          handleStageClick(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+    }
+
+    const modal = document.getElementById('avatar-creator-modal');
+    const btnCustomizer = document.getElementById('btn-open-customizer');
+    const btnSave = document.getElementById('btn-save-avatar-enter');
+
+    if (btnCustomizer && modal) {
+      btnCustomizer.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        this.renderAvatarPreview();
+      });
+    }
+
+    // Category Tabs: Human vs Mascot
+    const tabHuman = document.getElementById('tab-btn-human');
+    const tabMascot = document.getElementById('tab-btn-mascot');
+    const groupHuman = document.getElementById('group-human-controls');
+    const groupMascot = document.getElementById('group-mascot-picker');
+
+    if (tabHuman && tabMascot) {
+      tabHuman.addEventListener('click', () => {
+        tabHuman.classList.add('active');
+        tabMascot.classList.remove('active');
+        if (groupHuman) groupHuman.classList.remove('hidden');
+        if (groupMascot) groupMascot.classList.add('hidden');
+        this.userAvatar.category = 'human';
+        this.renderAvatarPreview();
+      });
+
+      tabMascot.addEventListener('click', () => {
+        tabMascot.classList.add('active');
+        tabHuman.classList.remove('active');
+        if (groupHuman) groupHuman.classList.add('hidden');
+        if (groupMascot) groupMascot.classList.remove('hidden');
+        this.userAvatar.category = 'mascot';
+        this.renderAvatarPreview();
+      });
+    }
+
+    // Mascot picker buttons
+    document.querySelectorAll('.mascot-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.mascot-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.userAvatar.category = 'mascot';
+        this.userAvatar.mascot = btn.dataset.value;
+        this.renderAvatarPreview();
+      });
+    });
+
+    // Human avatar options
     document.querySelectorAll('.avatar-gender-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
         document.querySelectorAll('.avatar-gender-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.userAvatar.gender = btn.dataset.gender;
-        this.userAvatar.hairStyle = this.userAvatar.gender === 'female' ? 'twin_buns' : 'curtain_kpop';
-        this.saveUserAvatar();
-        updatePreview();
+        this.renderAvatarPreview();
       });
     });
 
-    document.querySelectorAll('.avatar-opt-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+    document.querySelectorAll('.avatar-opt-btn:not(.mascot-btn)').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         const type = btn.dataset.type;
         const val = btn.dataset.value;
-        this.userAvatar[type] = val;
-        this.saveUserAvatar();
-        updatePreview();
+        if (type && val) {
+          this.userAvatar[type] = val;
+          this.renderAvatarPreview();
+        }
       });
     });
 
-    const nameInput = document.getElementById('avatar-nickname-input');
-    if (nameInput) {
-      nameInput.value = this.userAvatar.name;
-      nameInput.addEventListener('input', () => {
-        this.userAvatar.name = nameInput.value.trim() || 'Stay';
-        this.saveUserAvatar();
-      });
-    }
+    // Save & Enter (With Unique Nickname Validation!)
+    if (btnSave && modal) {
+      btnSave.addEventListener('click', () => {
+        const nickInput = document.getElementById('avatar-nickname-input');
+        const chosen = (nickInput ? nickInput.value.trim() : '') || 'Stay';
 
-    const btnEnter = document.getElementById('btn-save-avatar-enter');
-    if (btnEnter) {
-      btnEnter.addEventListener('click', () => {
-        this.saveUserAvatar();
-        document.getElementById('avatar-creator-modal').classList.add('hidden');
-        this.addLogMessage('Sistema', `Bem-vindo(a) ${this.userAvatar.name}! Divirta-se no lounge! ✨`);
-      });
-    }
+        // Check for duplicate names among active participants
+        const isDuplicate = Array.from(this.remoteUsers.values()).some(
+          u => u.name && u.name.toLowerCase() === chosen.toLowerCase() && u.id !== this.myClientId
+        ) || this.skzBots.some(b => b.name.toLowerCase() === chosen.toLowerCase())
+          || chosen.toLowerCase() === 'arari';
 
-    const btnOpenCustomizer = document.getElementById('btn-open-customizer');
-    if (btnOpenCustomizer) {
-      btnOpenCustomizer.addEventListener('click', () => {
-        document.getElementById('avatar-creator-modal').classList.remove('hidden');
-        updatePreview();
+        if (isDuplicate) {
+          alert(`O nome "${chosen}" já está em uso por outro Stay na sala! Escolha outro nome.`);
+          return;
+        }
+
+        this.userAvatar.name = chosen;
+        this.saveUserAvatar();
+        modal.classList.add('hidden');
+
+        // Broadcast updated avatar to everyone immediately!
+        this.broadcastPresence();
+        this.addLogMessage('Sistema', `Você entrou como: ${this.userAvatar.name} ✨`);
       });
     }
   }
 
+  setupDjEvents() {
+    const btnOpenDj = document.getElementById('btn-open-dj');
+    const djModal = document.getElementById('dj-booth-modal');
+    const btnCloseDj = document.getElementById('btn-close-dj');
+    const btnAddSong = document.getElementById('btn-dj-add-song');
+    const songInput = document.getElementById('dj-song-input');
+    const btnSkip = document.getElementById('btn-dj-skip');
+
+    if (btnOpenDj) btnOpenDj.addEventListener('click', () => this.openDjModal());
+    if (btnCloseDj && djModal) btnCloseDj.addEventListener('click', () => djModal.classList.add('hidden'));
+
+    if (btnAddSong && songInput) {
+      btnAddSong.addEventListener('click', () => {
+        const query = songInput.value.trim();
+        if (query) {
+          this.addSongToDjQueue(query);
+          songInput.value = '';
+        }
+      });
+    }
+
+    if (btnSkip) {
+      btnSkip.addEventListener('click', () => this.skipDjTrack());
+    }
+  }
+
+  openDjModal() {
+    const djModal = document.getElementById('dj-booth-modal');
+    if (djModal) {
+      djModal.classList.remove('hidden');
+      this.updateDjUI();
+    }
+  }
+
+  updateDjUI() {
+    const titleEl = document.getElementById('dj-current-title');
+    const ownerEl = document.getElementById('dj-current-owner');
+    const listEl = document.getElementById('dj-queue-items');
+
+    if (titleEl) titleEl.textContent = this.djState.currentTrack.title;
+    if (ownerEl) ownerEl.textContent = 'DJ da vez: ' + this.djState.currentTrack.dj;
+
+    if (listEl) {
+      listEl.innerHTML = '';
+      if (this.djState.queue.length === 0) {
+        listEl.innerHTML = '<div style="color:#64748b;font-size:10px;">Fila vazia. Peça uma música do Stray Kids acima!</div>';
+      } else {
+        this.djState.queue.forEach((item, idx) => {
+          const div = document.createElement('div');
+          div.style.cssText = 'font-size:10px;color:#94a3b8;padding:4px 6px;background:#180a36;border-radius:4px;';
+          div.textContent = `${idx + 1}. ${item.title} (pedido por ${item.requestedBy})`;
+          listEl.appendChild(div);
+        });
+      }
+    }
+  }
+
+  addSongToDjQueue(query) {
+    let videoId = 'gGzpAi8-8mU';
+    let title = query;
+
+    // Detect YouTube link
+    if (query.includes('youtu.be/')) {
+      videoId = query.split('youtu.be/')[1].split('?')[0];
+    } else if (query.includes('watch?v=')) {
+      videoId = query.split('watch?v=')[1].split('&')[0];
+    } else {
+      // Common SKZ favorites by keyword
+      const q = query.toLowerCase();
+      if (q.includes('maniac')) { videoId = 'EaswWdtB7n8'; title = 'Stray Kids - MANIAC'; }
+      else if (q.includes('menu')) { videoId = 'TQTlCHxyuu8'; title = "Stray Kids - God's Menu"; }
+      else if (q.includes('chk')) { videoId = 'gGzpAi8-8mU'; title = 'Stray Kids - Chk Chk Boom'; }
+      else if (q.includes('lala')) { videoId = 'OvioeS1ZZ7o'; title = 'Stray Kids - LALALALA'; }
+      else if (q.includes('thunder')) { videoId = 'EaswWdtB7n8'; title = 'Stray Kids - Thunderous'; }
+      else { title = 'Stray Kids - ' + query; }
+    }
+
+    const item = { id: videoId, title, requestedBy: this.userAvatar.name };
+    this.djState.queue.push(item);
+    this.updateDjUI();
+
+    this.addLogMessage('Mesa DJ 🎧', `${this.userAvatar.name} colocou "${title}" na fila de músicas!`);
+
+    if (this.mqttClient && this.mqttClient.connected) {
+      try {
+        this.mqttClient.publish('stayzoo/arari/chatpoint/dj_queue', JSON.stringify(this.djState));
+      } catch(e) {}
+    }
+  }
+
+  skipDjTrack() {
+    if (this.djState.queue.length > 0) {
+      const next = this.djState.queue.shift();
+      this.djState.currentTrack = {
+        id: next.id,
+        title: next.title,
+        dj: next.requestedBy
+      };
+
+      if (window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function') {
+        try { window.ytPlayer.loadVideoById(next.id); } catch(e){}
+      }
+
+      this.addLogMessage('Mesa DJ 🎧', `Tocando agora: ${next.title} (pedido por ${next.requestedBy})`);
+      this.updateDjUI();
+
+      if (this.mqttClient && this.mqttClient.connected) {
+        try {
+          this.mqttClient.publish('stayzoo/arari/chatpoint/dj_queue', JSON.stringify(this.djState));
+        } catch(e) {}
+      }
+    }
+  }
+
+  renderAvatarPreview() {
+    const canvas = document.getElementById('avatar-preview-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    AvatarRenderer.drawAvatar(ctx, canvas.width / 2, canvas.height / 2 + 10, this.userAvatar, false, 0);
+  }
+
   update(dt) {
-    // 1. User Avatar
+    const cw = this.canvas ? this.canvas.width : 800;
+    const ch = this.canvas ? this.canvas.height : 420;
+
+    // Safe boundaries on mobile/desktop
+    const safeMinX = 35;
+    const safeMaxX = Math.max(100, cw - 35);
+    const safeMinY = 70;
+    const safeMaxY = Math.max(120, ch - 35);
+
+    // 1. User Position
     const my = this.myPosition;
     const dist = Math.hypot(my.targetX - my.x, my.targetY - my.y);
-    if (dist > 4) {
+    if (dist > 3) {
       my.isWalking = true;
-      my.x += (my.targetX - my.x) * 0.1;
-      my.y += (my.targetY - my.y) * 0.1;
-      my.animFrame += dt * 8;
+      my.x += (my.targetX - my.x) * 0.08;
+      my.y += (my.targetY - my.y) * 0.08;
+      my.animFrame += dt * 6;
     } else {
       my.isWalking = false;
       my.animFrame = 0;
     }
+    my.x = Math.max(safeMinX, Math.min(safeMaxX, my.x));
+    my.y = Math.max(safeMinY, Math.min(safeMaxY, my.y));
+
     if (my.bubble) {
       my.bubble.timer -= dt;
       if (my.bubble.timer <= 0) my.bubble = null;
@@ -670,7 +911,7 @@ class ChatPointRoom {
       this.addLogMessage('Arari 🦜', phrase);
     }
     const aDist = Math.hypot(arari.targetX - arari.x, arari.targetY - arari.y);
-    if (aDist > 4) {
+    if (aDist > 3) {
       arari.isWalking = true;
       arari.x += (arari.targetX - arari.x) * 0.05;
       arari.y += (arari.targetY - arari.y) * 0.05;
@@ -679,65 +920,86 @@ class ChatPointRoom {
       arari.isWalking = false;
       arari.animFrame = 0;
     }
+    arari.x = Math.max(safeMinX, Math.min(safeMaxX, arari.x));
+    arari.y = Math.max(safeMinY, Math.min(safeMaxY, arari.y));
+
     if (arari.bubble) {
       arari.bubble.timer -= dt;
       if (arari.bubble.timer <= 0) arari.bubble = null;
     }
     if (Math.random() < 0.003 && !arari.isWalking) {
-      arari.targetX = 140 + Math.random() * (this.canvas.width - 280);
-      arari.targetY = 160 + Math.random() * (this.canvas.height - 240);
+      arari.targetX = safeMinX + Math.random() * (safeMaxX - safeMinX);
+      arari.targetY = safeMinY + Math.random() * (safeMaxY - safeMinY);
     }
 
     // 3. SKZ Member Bots
     this.skzBots.forEach(bot => {
       bot.timer -= dt;
       if (bot.timer <= 0) {
-        bot.timer = 24.0 + Math.random() * 22.0;
+        bot.timer = 18.0 + Math.random() * 20.0;
         const phrase = bot.phrases[Math.floor(Math.random() * bot.phrases.length)];
-        bot.bubble = { text: phrase, timer: 7.0 };
-        this.addLogMessage(bot.name, phrase);
+        bot.bubble = { text: phrase, timer: 7.5 };
+        this.addLogMessage(bot.name + ' ⭐', phrase);
       }
       const bDist = Math.hypot(bot.targetX - bot.x, bot.targetY - bot.y);
-      if (bDist > 4) {
+      if (bDist > 3) {
         bot.isWalking = true;
         bot.x += (bot.targetX - bot.x) * 0.04;
         bot.y += (bot.targetY - bot.y) * 0.04;
-        bot.animFrame += dt * 5;
       } else {
         bot.isWalking = false;
-        bot.animFrame = 0;
       }
+      bot.x = Math.max(safeMinX, Math.min(safeMaxX, bot.x));
+      bot.y = Math.max(safeMinY, Math.min(safeMaxY, bot.y));
+
       if (bot.bubble) {
         bot.bubble.timer -= dt;
         if (bot.bubble.timer <= 0) bot.bubble = null;
       }
       if (Math.random() < 0.002 && !bot.isWalking) {
-        bot.targetX = 100 + Math.random() * (this.canvas.width - 200);
-        bot.targetY = 160 + Math.random() * (this.canvas.height - 240);
+        bot.targetX = safeMinX + Math.random() * (safeMaxX - safeMinX);
+        bot.targetY = safeMinY + Math.random() * (safeMaxY - safeMinY);
       }
     });
 
-    // 4. Remote Users
-    this.remoteUsers.forEach(u => {
-      const uDist = Math.hypot(u.targetX - u.x, u.targetY - u.y);
-      if (uDist > 4) {
+    // 4. Remote Users Animation & Stale Disconnect Cleanup
+    const nowMs = Date.now();
+    for (const [id, u] of this.remoteUsers.entries()) {
+      if (nowMs - u.lastSeen > 25000) {
+        this.remoteUsers.delete(id);
+        continue;
+      }
+      const rDist = Math.hypot(u.targetX - u.x, u.targetY - u.y);
+      if (rDist > 3) {
         u.isWalking = true;
         u.x += (u.targetX - u.x) * 0.08;
         u.y += (u.targetY - u.y) * 0.08;
-        u.animFrame += dt * 8;
+        u.animFrame += dt * 6;
       } else {
         u.isWalking = false;
         u.animFrame = 0;
       }
+      u.x = Math.max(safeMinX, Math.min(safeMaxX, u.x));
+      u.y = Math.max(safeMinY, Math.min(safeMaxY, u.y));
+
       if (u.bubble) {
         u.bubble.timer -= dt;
         if (u.bubble.timer <= 0) u.bubble = null;
       }
-    });
+    }
+
+    // Heartbeat every 8s
+    this.heartbeatTimer += dt;
+    if (this.heartbeatTimer >= 8.0) {
+      this.heartbeatTimer = 0;
+      this.broadcastPresence();
+    }
   }
 
   // Draw identical stage environment for the chatroom
   drawChatStageBackground(ctx, cw, ch) {
+    const now = performance.now();
+
     // 1. Dark arena backdrop
     ctx.fillStyle = '#070412';
     ctx.fillRect(0, 0, cw, ch);
@@ -754,14 +1016,14 @@ class ChatPointRoom {
 
     // 3. Chrome STRAY KIDS Arch (Centered at top)
     if (this.skzArch.complete) {
-      const archW = Math.min(280, cw * 0.4);
+      const archW = Math.min(260, cw * 0.38);
       const archH = archW * (145 / 350);
       ctx.drawImage(this.skzArch, (cw - archW) / 2, 4, archW, archH);
     }
 
-    // 4. Main Stage Floor (Tiled with official stage tiles)
+    // 4. Main Stage Floor
     const stageY = 60;
-    const stageH = ch - 110;
+    const stageH = ch - 100;
     if (this.stagePattern) {
       ctx.fillStyle = this.stagePattern;
       ctx.fillRect(0, stageY, cw, stageH);
@@ -770,26 +1032,83 @@ class ChatPointRoom {
       ctx.fillRect(0, stageY, cw, stageH);
     }
 
-    // Stage guidance lines
     ctx.strokeStyle = '#435875';
     ctx.lineWidth = 2;
     ctx.strokeRect(0, stageY, cw, stageH);
 
-    // Cyan Runway guide accents
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(0, stageY + stageH - 3, cw, 3);
+    // 5. Concert Stage Speakers & Soundwaves
+    const beatPulse = Math.sin(now * 0.012);
+    const spkScale = 1.0 + beatPulse * 0.05;
 
-    // 5. Blinking concert lightsticks (Nachimbong) at the bottom
-    const now = performance.now();
+    // Left Speaker Stack
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(14, 110, 24 * spkScale, 48 * spkScale);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(14, 110, 24 * spkScale, 48 * spkScale);
+
+    // Right Speaker Stack
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(cw - 38, 110, 24 * spkScale, 48 * spkScale);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeRect(cw - 38, 110, 24 * spkScale, 48 * spkScale);
+
+    // Expanding Soundwaves
+    ctx.strokeStyle = '#38bdf8';
+    for (let i = 1; i <= 3; i++) {
+      const waveRad = ((now * 0.04 + i * 20) % 60);
+      const alpha = Math.max(0, 1 - waveRad / 60) * 0.5;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(36, 134, waveRad, -0.4 * Math.PI, 0.4 * Math.PI);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(cw - 36, 134, waveRad, 0.6 * Math.PI, 1.4 * Math.PI);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 6. DJ Booth Table on Stage
+    this.djBooth.x = Math.min(cw - 110, Math.max(380, cw * 0.75));
+    const dj = this.djBooth;
+    ctx.fillStyle = '#1e113a';
+    ctx.fillRect(dj.x, dj.y, dj.w, dj.h);
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(dj.x, dj.y, dj.w, dj.h);
+
+    // Dual Turntables
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath(); ctx.arc(dj.x + 24, dj.y + 20, 12, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(dj.x + dj.w - 24, dj.y + 20, 12, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath(); ctx.arc(dj.x + 24, dj.y + 20, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(dj.x + dj.w - 24, dj.y + 20, 3, 0, Math.PI * 2); ctx.fill();
+
+    // Equalizer LED bar
+    for (let ei = 0; ei < 5; ei++) {
+      const barH = 4 + Math.abs(Math.sin(now * 0.01 + ei)) * 12;
+      ctx.fillStyle = ei % 2 === 0 ? '#10b981' : '#f59e0b';
+      ctx.fillRect(dj.x + 38 + ei * 3, dj.y + 28 - barH, 2, barH);
+    }
+
+    ctx.font = 'bold 8px DePixelBold, monospace';
+    ctx.fillStyle = '#ffd700';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎧 MESA DJ', dj.x + dj.w / 2, dj.y + 44);
+    ctx.textAlign = 'left';
+
+    // 7. Blinking concert lightsticks at the bottom
     const colors = ['#ffffff', '#38bdf8', '#e879f9', '#ffd700', '#4ade80', '#fb923c'];
-    for (let lx = 12; lx < cw; lx += 22) {
+    for (let lx = 14; lx < cw; lx += 22) {
       const pulse = Math.sin((lx * 0.05 + now * 0.003));
       if (pulse > 0.1) {
         const ci = Math.floor(Math.abs(lx * 7) % colors.length);
         ctx.fillStyle = colors[ci];
         ctx.globalAlpha = 0.3 + 0.6 * ((pulse + 1) / 2);
         ctx.beginPath();
-        ctx.arc(lx, ch - 30 + Math.sin(lx * 0.2) * 12, 2.5, 0, Math.PI * 2);
+        ctx.arc(lx, ch - 22 + Math.sin(lx * 0.2) * 8, 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -802,7 +1121,7 @@ class ChatPointRoom {
     const cw = this.canvas.width;
     const ch = this.canvas.height;
 
-    // 1. Draw Authentic Stage Background
+    // 1. Draw Authentic Stage Background with DJ & Speakers
     this.drawChatStageBackground(ctx, cw, ch);
 
     // 2. Draw Arari Mascot Bot
@@ -811,29 +1130,32 @@ class ChatPointRoom {
     // 3. Draw SKZ Member Bots
     this.drawSkzBots(ctx, now);
 
-    // 4. Draw Users (User + Remote Users sorted by Y)
-    const users = [
-      { isMe: true, ...this.myPosition, avatar: this.userAvatar, name: this.userAvatar.name },
-      ...this.remoteUsers
+    // 4. Draw Characters (My User + Remote Users, sorted by Y for natural depth!)
+    const allUsers = [
+      { ...this.myPosition, name: this.userAvatar.name, avatar: this.userAvatar, isMe: true },
+      ...Array.from(this.remoteUsers.values()).map(u => ({ ...u, isMe: false }))
     ];
-    users.sort((a, b) => a.y - b.y);
+    allUsers.sort((a, b) => a.y - b.y);
 
-    users.forEach(c => {
+    allUsers.forEach(c => {
       AvatarRenderer.drawAvatar(ctx, c.x, c.y, c.avatar, c.isWalking, c.animFrame);
 
-      // Name Tag Pill
+      // Name Tag
       ctx.font = 'bold 9px DePixelBold, monospace';
       ctx.textAlign = 'center';
-      const textW = ctx.measureText(c.name).width;
+      const label = c.isMe ? `★ ${c.name}` : c.name;
+      const tw = ctx.measureText(label).width;
 
-      ctx.fillStyle = c.isMe ? '#ffd700' : 'rgba(15, 23, 42, 0.85)';
-      ctx.fillRect(c.x - textW / 2 - 4, c.y + 26, textW + 8, 14);
-      ctx.strokeStyle = c.isMe ? '#b45309' : '#a855f7';
-      ctx.strokeRect(c.x - textW / 2 - 4, c.y + 26, textW + 8, 14);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.fillRect(c.x - tw / 2 - 4, c.y + 26, tw + 8, 13);
+      ctx.strokeStyle = c.isMe ? '#ffd700' : '#a855f7';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(c.x - tw / 2 - 4, c.y + 26, tw + 8, 13);
 
-      ctx.fillStyle = c.isMe ? '#0f172a' : '#ffffff';
-      ctx.fillText(c.name, c.x, c.y + 37);
+      ctx.fillStyle = c.isMe ? '#ffd700' : '#ffffff';
+      ctx.fillText(label, c.x, c.y + 36);
 
+      // Speech Bubble
       if (c.bubble) {
         this.drawSpeechBubble(ctx, c.x, c.y - 40, c.bubble.text);
       }
@@ -843,7 +1165,7 @@ class ChatPointRoom {
   drawArariBot(ctx, now) {
     const a = this.arariBot;
 
-    // Ground Shadow under Arari bot
+    // Ground Shadow
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(Math.floor(a.x), Math.floor(a.y + 18), 14, 5, 0, 0, Math.PI * 2);
@@ -870,11 +1192,11 @@ class ChatPointRoom {
           col = Math.floor(now * 0.008) % 5;
           flipLeft = (dx < 0);
         } else if (dy < 0) {
-          row = 3; // Up walk (back)
+          row = 3; // Up walk
           col = Math.floor(now * 0.008) % 4;
         } else {
-          row = 2; // Down walk (front)
-          col = Math.floor(now * 0.008) % 4;
+          row = 2; // Down walk
+          col = Math.floor(now * 0.008) % 5;
         }
       } else {
         row = 0; // Front idle
@@ -907,9 +1229,9 @@ class ChatPointRoom {
     ctx.fillRect(-tw / 2 - 4, 30, tw + 8, 14);
     ctx.strokeStyle = '#ffd700';
     ctx.strokeRect(-tw / 2 - 4, 30, tw + 8, 14);
+
     ctx.fillStyle = '#ffd700';
     ctx.fillText(tag, 0, 41);
-
     ctx.restore();
 
     if (a.bubble) {
@@ -919,7 +1241,7 @@ class ChatPointRoom {
 
   drawSkzBots(ctx, now) {
     this.skzBots.forEach(bot => {
-      // Ground Shadow under Stray Kids bot
+      // Ground Shadow
       ctx.save();
       ctx.beginPath();
       ctx.ellipse(Math.floor(bot.x), Math.floor(bot.y + 18), 14, 5, 0, 0, Math.PI * 2);
@@ -953,19 +1275,13 @@ class ChatPointRoom {
         ctx.arc(bot.x, bot.y, 14, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
 
-      // Name Tag Pill
+      // Bot Name Tag
       ctx.font = 'bold 8px DePixelBold, monospace';
       ctx.textAlign = 'center';
-      const tw = ctx.measureText(bot.name).width;
-
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      ctx.fillRect(bot.x - tw / 2 - 3, bot.y + 24, tw + 6, 12);
-      ctx.strokeStyle = bot.color;
-      ctx.strokeRect(bot.x - tw / 2 - 3, bot.y + 24, tw + 6, 12);
       ctx.fillStyle = bot.color;
-      ctx.fillText(bot.name, bot.x, bot.y + 33);
-      ctx.restore();
+      ctx.fillText(`★ ${bot.name}`, bot.x, bot.y + 34);
 
       if (bot.bubble) {
         this.drawSpeechBubble(ctx, bot.x, bot.y - 36, bot.bubble.text);
@@ -974,47 +1290,39 @@ class ChatPointRoom {
   }
 
   drawSpeechBubble(ctx, x, y, text) {
+    ctx.save();
     ctx.font = '10px DePixel, monospace';
-    ctx.textAlign = 'center';
-    const lines = [];
-    const maxChars = 26;
-    for (let i = 0; i < text.length; i += maxChars) {
-      lines.push(text.substring(i, i + maxChars));
-    }
+    const lines = text.length > 28 ? [text.slice(0, 26) + '...', text.slice(26, 52)] : [text];
+    const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+    const boxW = maxLineW + 16;
+    const boxH = lines.length * 14 + 10;
+    const boxX = x - boxW / 2;
+    const boxY = y - boxH;
 
-    const pad = 8;
-    const lineH = 13;
-    const bubbleH = lines.length * lineH + pad * 2;
-    let maxW = 0;
-    lines.forEach(l => {
-      const w = ctx.measureText(l).width;
-      if (w > maxW) maxW = w;
-    });
-    const bubbleW = Math.max(70, maxW + pad * 2);
-
-    const bx = x - bubbleW / 2;
-    const by = y - bubbleH;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 1.5;
-
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
     ctx.beginPath();
-    ctx.roundRect(bx, by, bubbleW, bubbleH, 8);
+    ctx.roundRect(boxX, boxY, boxW, boxH, 8);
     ctx.fill();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
+    // Triangle pointer
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
     ctx.beginPath();
-    ctx.moveTo(x - 5, by + bubbleH);
-    ctx.lineTo(x, by + bubbleH + 6);
-    ctx.lineTo(x + 5, by + bubbleH);
+    ctx.moveTo(x - 5, boxY + boxH);
+    ctx.lineTo(x, boxY + boxH + 6);
+    ctx.lineTo(x + 5, boxY + boxH);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#0f172a';
-    lines.forEach((l, idx) => {
-      ctx.fillText(l, x, by + pad + 9 + idx * lineH);
+    ctx.textAlign = 'center';
+    lines.forEach((line, idx) => {
+      ctx.fillText(line, x, boxY + 14 + idx * 14);
     });
+    ctx.restore();
   }
 
   loop(now) {
@@ -1028,6 +1336,7 @@ class ChatPointRoom {
   }
 }
 
+// Global ChatPoint Singleton
 window._chatPoint = null;
 window.initChatPoint = function() {
   if (!window._chatPoint) {

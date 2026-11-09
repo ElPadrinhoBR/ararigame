@@ -731,6 +731,45 @@ html, body {
   padding: 0;
 }
 
+/* Category tabs & Mascot Grid */
+.avatar-category-btn {
+  background: #180932;
+  border: 1px solid #a855f766;
+  color: #ccc;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: 'DePixelBold', monospace;
+  font-size: 10px;
+  cursor: pointer;
+}
+.avatar-category-btn.active {
+  background: #7c3aed;
+  border-color: #ffd700;
+  color: #fff;
+}
+.mascot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.mascot-btn {
+  background: #15062c;
+  border: 1px solid #a855f744;
+  color: #e2e8f0;
+  padding: 6px;
+  border-radius: 6px;
+  font-family: 'DePixelBold', monospace;
+  font-size: 9px;
+  cursor: pointer;
+  text-align: center;
+}
+.mascot-btn:hover, .mascot-btn.active {
+  background: #6d28d9;
+  border-color: #ffd700;
+  color: #fff;
+}
+
+
 /* Responsive & Mobile Adaptability */
 @media (min-width: 1025px) {
   #mobile-touch-controls { display: none; }
@@ -743,8 +782,42 @@ html, body {
   #hud-top { padding: 4px 10px; }
   .music-controller { max-width: 180px; }
   .volume-slider-box { display: none; }
-  #chat-main-container { flex-direction: column; }
-  #chat-log-panel { width: 100%; height: 210px; }
+  #chat-main-container {
+    flex-direction: column;
+    height: calc(100vh - 50px);
+    height: calc(100dvh - 50px);
+    overflow: hidden;
+  }
+  #chat-stage-wrapper {
+    flex: 1;
+    min-height: 200px;
+    position: relative;
+    overflow: hidden;
+  }
+  #chat-log-panel {
+    width: 100% !important;
+    height: 180px !important;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: #0f0722;
+    border-top: 2px solid #a855f7;
+    position: relative;
+    z-index: 100;
+  }
+  .chat-input-row {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 120;
+    background: #180932;
+    padding: 6px 8px;
+  }
+  #chat-input-field {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
   .avatar-creator-layout { flex-direction: column; align-items: center; }
   .avatar-preview-box { width: 100%; }
   .modal-card { max-width: 95vw; padding: 18px 14px; }
