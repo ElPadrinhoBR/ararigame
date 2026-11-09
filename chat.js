@@ -842,6 +842,15 @@ class ChatPointRoom {
 
   drawArariBot(ctx, now) {
     const a = this.arariBot;
+
+    // Ground Shadow under Arari bot
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(Math.floor(a.x), Math.floor(a.y + 18), 14, 5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+    ctx.fill();
+    ctx.restore();
+
     ctx.save();
     ctx.translate(Math.floor(a.x), Math.floor(a.y));
 
@@ -901,6 +910,14 @@ class ChatPointRoom {
 
   drawSkzBots(ctx, now) {
     this.skzBots.forEach(bot => {
+      // Ground Shadow under Stray Kids bot
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(Math.floor(bot.x), Math.floor(bot.y + 18), 14, 5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+      ctx.fill();
+      ctx.restore();
+
       const atlas = this.memberAtlases[bot.id];
       const tex = this.memberTextures[bot.id];
       const scale = 1.7;

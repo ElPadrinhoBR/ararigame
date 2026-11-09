@@ -897,6 +897,18 @@ class ArariGame {
         return true;
       }
     }
+
+    // Solid collision with Stray Kids members on stage (Arari won't walk through them!)
+    if (!this.arari.flying && this.members) {
+      const memberRadius = 24;
+      for (const m of this.members) {
+        const dist = Math.hypot(nextX - m.x, nextY - m.y);
+        if (dist < memberRadius) {
+          return true;
+        }
+      }
+    }
+
     return false;
   }
 
@@ -1275,6 +1287,14 @@ class ArariGame {
     for (const m of this.members) {
       if (m.x < vx - 50 || m.x > vx + vw + 50 || m.y < vy - 50 || m.y > vy + vh + 50) continue;
 
+      // Authentic Pixel-Art Ground Shadow (under feet)
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(Math.floor(m.x), Math.floor(m.y + 20), 16, 7, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+      ctx.fill();
+      ctx.restore();
+
       const atlas = this.assets.memberAtlases[m.id];
       const tex = this.assets.memberTextures[m.id];
       const scale = 2.0;
@@ -1323,8 +1343,23 @@ class ArariGame {
     const FRAME_SIZE = 96;
     const DISPLAY_SIZE = 60;
 
-    // Gentle footstep bob while moving on the ground
-    const walkBob = (moving && !flying) ? Math.sin(now * 0.02) * 1.5 : 0;
+    // 1. Authentic Pixel-Art Ground Shadow (remains cast on floor beneath Arari)
+    ctx.save();
+    ctx.beginPath();
+    if (flying) {
+      // High flight: shadow shrinks and softens on the ground
+      ctx.ellipse(Math.floor(x), Math.floor(y + 22), 11, 5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+    } else {
+      // Walking / Idle on ground
+      ctx.ellipse(Math.floor(x), Math.floor(y + 20), 15, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+    }
+    ctx.fill();
+    ctx.restore();
+
+    // Gentle footstep bob while moving on the ground (or float lift when flying)
+    const walkBob = flying ? -6 + Math.sin(now * 0.006) * 3 : ((moving) ? Math.sin(now * 0.02) * 1.5 : 0);
 
     ctx.save();
     ctx.translate(Math.floor(x), Math.floor(y + walkBob));
